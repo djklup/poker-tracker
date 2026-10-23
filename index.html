@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full bg-slate-900 text-slate-100">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,1048 +8,1113 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
-        }
-        /* Custom scrollbar for spreadsheet view */
-        ::-webkit-scrollbar {
-            height: 8px;
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #1e293b;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #475569;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #64748b;
-        }
+        body { font-family: 'Inter', sans-serif; }
+        .modal-backdrop { background-color: rgba(15, 23, 42, 0.75); }
     </style>
 </head>
-<body class="min-h-screen flex flex-col justify-between antialiased">
+<body class="h-full flex flex-col min-h-screen bg-slate-900 text-slate-100 antialiased">
 
-    <!-- Auth View Container (Shown when logged out) -->
-    <div id="authScreen" class="fixed inset-0 z-50 bg-slate-950 flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 sm:p-8 shadow-2xl relative text-center">
-            <div class="inline-flex bg-emerald-600 text-white p-3.5 rounded-2xl shadow-lg shadow-emerald-900/50 mb-4">
-                <i class="fa-solid font-bold text-3xl fa-spade">♠</i>
-            </div>
-            <h1 class="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-teal-200 bg-clip-text text-transparent">
-                Poker Bankroll Tracker
-            </h1>
-            <p class="text-xs text-slate-400 mt-1 mb-6">Cloud Synchronized & Secure Personal Log</p>
-
-            <!-- Authentication Form / Status -->
-            <div id="authFormContainer" class="space-y-4">
-                <p class="text-xs text-slate-300 leading-relaxed bg-slate-800/80 p-3 rounded-xl border border-slate-700/60">
-                    Sign in to securely access your live session and bankroll history across all your devices.
-                </p>
-
-                <button id="googleSignInBtn" onclick="loginWithGoogle()" class="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-medium py-3 px-4 rounded-xl transition flex items-center justify-center gap-3 shadow-md">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24">
-                        <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.2 9 5 12 5z"/>
-                        <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"/>
-                        <path fill="#FBBC05" d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.9 7.3C.7 9.7 0 10.8 0 12s.7 2.3 1.9 4.7l3.7-2.9z"/>
-                        <path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.2-6.4-5.2L1.9 16c1.8 3.7 5.6 7 10.1 7z"/>
-                    </svg>
-                    <span>Sign in with Google</span>
-                </button>
-
-                <div class="relative my-4">
-                    <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-800"></div></div>
-                    <div class="relative flex justify-center text-xs uppercase"><span class="bg-slate-900 px-2 text-slate-500">Or Quick Guest Login</span></div>
-                </div>
-
-                <button onclick="loginAnonymously()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-3 px-4 rounded-xl transition shadow-lg shadow-emerald-900/30 flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-user-shield text-sm"></i>
-                    <span>Continue as Private User</span>
-                </button>
-
-                <p id="authErrorMessage" class="text-xs text-rose-400 font-medium hidden mt-2"></p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Header Navigation -->
-    <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+    <!-- Top Navigation Header -->
+    <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-30 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div class="flex items-center space-x-3">
-                <div class="bg-emerald-600 text-white p-2.5 rounded-xl shadow-lg shadow-emerald-900/40">
-                    <i class="fa-solid font-bold text-xl fa-spade">♠</i>
+                <div class="bg-emerald-600 p-2 rounded-xl text-white shadow-lg shadow-emerald-600/30">
+                    <i class="fa-solid font-bold text-xl fa-spade"></i>
                 </div>
                 <div>
-                    <h1 class="text-xl font-bold bg-gradient-to-r from-emerald-400 to-teal-200 bg-clip-text text-transparent">
-                        Bankroll Tracker
-                    </h1>
-                    <p class="text-xs text-slate-400">Online Poker Cloud Log</p>
+                    <h1 class="text-lg font-bold tracking-tight text-white leading-none">Poker Tracker</h1>
+                    <span class="text-xs text-slate-400">Bankroll & Analytics</span>
                 </div>
             </div>
-            <div class="flex items-center space-x-2 sm:space-x-4">
-                <button onclick="openModal('addPastSessionModal')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-lg text-xs sm:text-sm font-medium border border-slate-700 transition flex items-center gap-1.5">
-                    <i class="fa-solid fa-plus text-emerald-400"></i>
-                    <span class="hidden sm:inline">Add Past Session</span>
-                </button>
-                <button onclick="exportToCSV()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition shadow-md shadow-emerald-900/30 flex items-center gap-1.5">
-                    <i class="fa-solid fa-file-csv"></i>
-                    <span>Export CSV</span>
-                </button>
-                <!-- User Account Info & Sign Out -->
-                <div class="border-l border-slate-800 pl-2 sm:pl-4 flex items-center gap-2">
-                    <div class="text-right hidden md:block">
-                        <span id="userDisplayName" class="block text-xs font-semibold text-slate-200">User</span>
-                        <span id="userStatusTag" class="block text-[10px] text-emerald-400">Synced to Cloud</span>
-                    </div>
-                    <button onclick="logoutUser()" title="Sign Out" class="bg-slate-800 hover:bg-rose-950 hover:text-rose-400 text-slate-400 p-2 rounded-lg border border-slate-700 transition">
-                        <i class="fa-solid fa-right-from-bracket"></i>
+
+            <!-- Auth Controls -->
+            <div id="auth-container" class="flex items-center space-x-3">
+                <div id="user-profile" class="hidden items-center space-x-2">
+                    <img id="user-avatar" class="w-8 h-8 rounded-full border border-slate-600" src="" alt="Avatar">
+                    <span id="user-name" class="text-sm font-medium text-slate-200 hidden md:inline"></span>
+                    <button id="btn-logout" class="text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 py-1.5 px-3 rounded-lg border border-slate-600 transition">
+                        Sign Out
                     </button>
                 </div>
+                <button id="btn-login" class="flex items-center space-x-2 bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-sm py-2 px-4 rounded-xl transition shadow-md shadow-emerald-600/20">
+                    <i class="fa-brands fa-google"></i>
+                    <span>Sign In with Google</span>
+                </button>
             </div>
         </div>
     </header>
 
     <!-- Main Content Container -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full flex-1 space-y-6">
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
-        <!-- Active Session Banner / Controller -->
-        <div id="sessionContainer">
-            <!-- Dynamic session card will load here -->
-        </div>
-
-        <!-- Dashboard Analytics Overview -->
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4">
-            <div class="bg-slate-800/80 border border-slate-700/60 rounded-xl p-4 shadow-sm">
-                <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Total Net Profit</p>
-                <p id="statNetProfit" class="text-xl sm:text-2xl font-bold mt-1 text-slate-200">$0.00</p>
-            </div>
-            <div class="bg-slate-800/80 border border-slate-700/60 rounded-xl p-4 shadow-sm">
-                <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Hands Played</p>
-                <p id="statTotalHands" class="text-xl sm:text-2xl font-bold mt-1 text-slate-200">0</p>
-            </div>
-            <div class="bg-slate-800/80 border border-slate-700/60 rounded-xl p-4 shadow-sm">
-                <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Hours Played</p>
-                <p id="statTotalHours" class="text-xl sm:text-2xl font-bold mt-1 text-slate-200">0.0 hrs</p>
-            </div>
-            <div class="bg-slate-800/80 border border-slate-700/60 rounded-xl p-4 shadow-sm">
-                <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Hourly Rate</p>
-                <p id="statHourlyRate" class="text-xl sm:text-2xl font-bold mt-1 text-slate-200">$0.00/hr</p>
-            </div>
-            <div class="col-span-2 md:col-span-1 bg-slate-800/80 border border-slate-700/60 rounded-xl p-4 shadow-sm">
-                <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Win Rate (bb/100)</p>
-                <p id="statBB100" class="text-xl sm:text-2xl font-bold mt-1 text-slate-200">0.00 bb/100</p>
-            </div>
-        </div>
-
-        <!-- Session History Spreadsheet Table -->
-        <div class="bg-slate-800/90 border border-slate-700/80 rounded-2xl shadow-xl overflow-hidden flex flex-col">
-            <div class="p-4 sm:p-5 border-b border-slate-700/80 flex flex-wrap justify-between items-center gap-3">
-                <div class="flex items-center gap-2">
-                    <i class="fa-solid fa-table text-emerald-400 text-lg"></i>
-                    <h2 class="text-lg font-bold text-white">Session History</h2>
-                    <span id="sessionCountBadge" class="bg-slate-700 text-slate-300 text-xs px-2.5 py-0.5 rounded-full">0 sessions</span>
+        <!-- Active Session Banner (Shown if live session in progress) -->
+        <div id="active-session-banner" class="hidden bg-gradient-to-r from-emerald-900/80 to-slate-800 border border-emerald-500/40 rounded-2xl p-5 shadow-lg relative overflow-hidden">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
+                <div class="space-y-1">
+                    <div class="flex items-center space-x-2">
+                        <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span class="text-xs font-bold tracking-wider uppercase text-emerald-400">Session In Progress</span>
+                    </div>
+                    <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                        <span id="active-game-type">NL Hold'em</span>
+                        <span class="text-slate-400 text-base">•</span>
+                        <span id="active-stakes" class="text-emerald-300">$1/$2</span>
+                    </h2>
+                    <p class="text-xs text-slate-400">Started: <span id="active-start-time"></span></p>
                 </div>
-                <div class="flex items-center gap-2">
-                    <button onclick="loadSampleData()" class="text-xs text-slate-400 hover:text-emerald-400 transition underline px-2">
-                        Load Sample Data
-                    </button>
-                    <button onclick="clearData()" class="text-xs text-rose-400 hover:text-rose-300 transition underline px-2">
-                        Reset Data
+
+                <div class="flex items-center gap-6">
+                    <div class="text-left md:text-right">
+                        <div class="text-xs text-slate-400 uppercase tracking-wider">Duration</div>
+                        <div id="active-timer" class="text-2xl font-mono font-bold text-emerald-400">00:00:00</div>
+                    </div>
+                    <button id="btn-open-stop-modal" class="bg-rose-600 hover:bg-rose-500 text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition shadow-lg shadow-rose-600/30 flex items-center space-x-2">
+                        <i class="fa-solid fa-stop"></i>
+                        <span>End Session</span>
                     </button>
                 </div>
             </div>
+        </div>
 
-            <!-- Table -->
-            <div class="overflow-x-auto w-full max-h-[500px]">
-                <table class="w-full text-left text-xs sm:text-sm text-slate-300">
-                    <thead class="text-xs uppercase bg-slate-900/80 text-slate-400 sticky top-0 border-b border-slate-700 z-10">
-                        <tr>
-                            <th scope="col" class="py-3.5 px-4 font-semibold">Start Time</th>
-                            <th scope="col" class="py-3.5 px-4 font-semibold">Duration</th>
-                            <th scope="col" class="py-3.5 px-4 font-semibold">Game</th>
-                            <th scope="col" class="py-3.5 px-4 font-semibold">Stakes</th>
-                            <th scope="col" class="py-3.5 px-4 font-semibold text-right">Hands</th>
-                            <th scope="col" class="py-3.5 px-4 font-semibold text-right">Start / End Balance</th>
-                            <th scope="col" class="py-3.5 px-4 font-semibold text-right">Net Profit</th>
-                            <th scope="col" class="py-3.5 px-4 font-semibold text-right">Win Rates</th>
-                            <th scope="col" class="py-3.5 px-4 font-center text-center">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="historyTableBody" class="divide-y divide-slate-700/50">
-                        <!-- Table rows populated dynamically -->
-                    </tbody>
-                </table>
+        <!-- Dashboard Stats Grid -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-4 flex flex-col justify-between">
+                <span class="text-xs font-medium text-slate-400">Total Net Profit</span>
+                <div id="stat-total-profit" class="text-xl sm:text-2xl font-bold text-slate-100 mt-1">$0.00</div>
+                <span class="text-[10px] text-slate-500 mt-1">Overall bankroll shift</span>
             </div>
-
-            <!-- Empty State Display -->
-            <div id="emptyState" class="hidden py-12 text-center text-slate-400 flex flex-col items-center justify-center">
-                <i class="fa-solid fa-folder-open text-4xl mb-3 text-slate-600"></i>
-                <p class="text-base font-medium">No recorded sessions yet</p>
-                <p class="text-xs text-slate-500 mt-1 max-w-sm">Start an active session above or click "Add Past Session" to log manual entries.</p>
+            <div class="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-4 flex flex-col justify-between">
+                <span class="text-xs font-medium text-slate-400">Hourly Rate</span>
+                <div id="stat-hourly-rate" class="text-xl sm:text-2xl font-bold text-slate-100 mt-1">$0.00/hr</div>
+                <span class="text-[10px] text-slate-500 mt-1">Weighted average</span>
+            </div>
+            <div class="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-4 flex flex-col justify-between">
+                <span class="text-xs font-medium text-slate-400">BB / 100</span>
+                <div id="stat-bb-100" class="text-xl sm:text-2xl font-bold text-slate-100 mt-1">0.00</div>
+                <span class="text-[10px] text-slate-500 mt-1">Big blinds per 100 hands</span>
+            </div>
+            <div class="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-4 flex flex-col justify-between">
+                <span class="text-xs font-medium text-slate-400">Win Rate %</span>
+                <div id="stat-win-rate" class="text-xl sm:text-2xl font-bold text-slate-100 mt-1">0%</div>
+                <span id="stat-session-count" class="text-[10px] text-slate-500 mt-1">0 total sessions</span>
             </div>
         </div>
-    </main>
 
-    <!-- Modal for Manual/Past Session Entry -->
-    <div id="addPastSessionModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4 overflow-y-auto">
-        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative my-8">
-            <div class="flex justify-between items-center border-b border-slate-700 pb-4 mb-4">
-                <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                    <i class="fa-solid fa-clock-rotate-left text-emerald-400"></i>
-                    Add Past Session
-                </h3>
-                <button onclick="closeModal('addPastSessionModal')" class="text-slate-400 hover:text-white text-lg">
-                    <i class="fa-solid fa-xmark"></i>
+        <!-- Action Bar: Start Live or Add Manual Session -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+            <div class="flex items-center space-x-2">
+                <button id="btn-start-session-modal" class="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-sm px-4 py-2.5 rounded-xl transition flex items-center justify-center space-x-2 shadow-md shadow-emerald-600/20">
+                    <i class="fa-solid fa-play"></i>
+                    <span>Start Live Session</span>
+                </button>
+                <button id="btn-manual-entry-modal" class="flex-1 sm:flex-none bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-medium text-sm px-4 py-2.5 rounded-xl transition flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Log Past Session</span>
                 </button>
             </div>
 
-            <form id="pastSessionForm" onsubmit="handlePastSessionSubmit(event)" class="space-y-4">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="flex items-center space-x-2 self-end sm:self-auto">
+                <button id="btn-export-csv" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3 py-2 rounded-lg transition flex items-center space-x-1.5">
+                    <i class="fa-solid fa-file-csv"></i>
+                    <span>Export CSV</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Bankroll Graph -->
+        <div class="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-5 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-sm font-semibold text-slate-200">Bankroll Growth Graph</h3>
+                <span class="text-xs text-slate-400">Cumulative Profit ($)</span>
+            </div>
+            <div class="h-64 w-full">
+                <canvas id="bankrollChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Session History Table -->
+        <div class="bg-slate-800/80 border border-slate-700/60 rounded-2xl overflow-hidden shadow-sm">
+            <div class="p-4 border-b border-slate-700/80 flex items-center justify-between">
+                <h3 class="text-sm font-semibold text-slate-200">Session History</h3>
+                <span id="table-session-counter" class="text-xs text-slate-400">0 sessions logged</span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-slate-900/60 text-slate-400 uppercase tracking-wider border-b border-slate-700/60">
+                        <tr>
+                            <th class="py-3 px-4">Date & Time</th>
+                            <th class="py-3 px-4">Game</th>
+                            <th class="py-3 px-4">Stakes</th>
+                            <th class="py-3 px-4">Duration</th>
+                            <th class="py-3 px-4">Hands</th>
+                            <th class="py-3 px-4">Profit / Loss</th>
+                            <th class="py-3 px-4">Hourly</th>
+                            <th class="py-3 px-4">BB/100</th>
+                            <th class="py-3 px-4">Notes</th>
+                            <th class="py-3 px-4 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="session-table-body" class="divide-y divide-slate-700/50 text-slate-300">
+                        <tr>
+                            <td colspan="10" class="py-8 text-center text-slate-500 italic">
+                                No sessions logged yet. Start a session or log one manually!
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800 py-4 text-center text-xs text-slate-500">
+        Poker Bankroll Tracker • Cloud Synced & Fully Editable
+    </footer>
+
+    <!-- MODAL: START SESSION -->
+    <div id="modal-start-session" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
+            <div class="flex items-center justify-between border-b border-slate-700 pb-3">
+                <h3 class="font-bold text-lg text-white">Start Live Session</h3>
+                <button class="btn-close-modal text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="form-start-session" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Game Type</label>
+                    <select id="start-game-type" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+                        <option value="NL Hold'em">NL Hold'em</option>
+                        <option value="PLO">Pot Limit Omaha (PLO)</option>
+                        <option value="PLO5">PLO 5-Card</option>
+                        <option value="Mixed Game">Mixed Game</option>
+                        <option value="Tournament">Tournament</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Stakes ($ Small Blind / $ Big Blind)</label>
+                    <select id="start-stakes" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+                        <option value="0.25/0.50">$0.25 / $0.50</option>
+                        <option value="0.50/1.00">$0.50 / $1.00</option>
+                        <option value="1.00/2.00" selected>$1.00 / $2.00</option>
+                        <option value="1.00/3.00">$1.00 / $3.00</option>
+                        <option value="2.00/5.00">$2.00 / $5.00</option>
+                        <option value="2.50/5.00">$2.50 / $5.00</option>
+                        <option value="5.00/10.00">$5.00 / $10.00</option>
+                        <option value="10.00/20.00">$10.00 / $20.00</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Game Type</label>
-                        <select id="pastGame" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
-                            <option value="NLH">NLH (No Limit Hold'em)</option>
-                            <option value="PLO4">PLO4 (Pot Limit Omaha)</option>
-                        </select>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Buy-In / Wallet ($)</label>
+                        <input type="number" id="start-wallet" step="0.01" min="0" placeholder="200.00" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Stakes</label>
-                        <select id="pastStakes" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
-                            <option value="$0.05/$0.10">$0.05 / $0.10 (10NL)</option>
-                            <option value="$0.10/$0.20">$0.10 / $0.20 (20NL)</option>
-                            <option value="$0.25/$0.50">$0.25 / $0.50 (50NL)</option>
-                            <option value="$0.50/$1.00">$0.50 / $1.00 (100NL)</option>
-                            <option value="$1.00/$2.00">$1.00 / $2.00 (200NL)</option>
-                        </select>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Starting Hand #</label>
+                        <input type="number" id="start-hands" step="1" min="0" value="0" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
                     </div>
                 </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Start Time</label>
-                        <input type="datetime-local" id="pastStartTime" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Stop Time</label>
-                        <input type="datetime-local" id="pastStopTime" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Start Lifetime Hands</label>
-                        <input type="number" id="pastStartHands" min="0" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500" placeholder="e.g. 15000">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">End Lifetime Hands</label>
-                        <input type="number" id="pastEndHands" min="0" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500" placeholder="e.g. 15450">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Start Wallet Balance ($)</label>
-                        <input type="number" step="0.01" id="pastStartBalance" min="0" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500" placeholder="e.g. 200.00">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">End Wallet Balance ($)</label>
-                        <input type="number" step="0.01" id="pastEndBalance" min="0" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500" placeholder="e.g. 245.50">
-                    </div>
-                </div>
-
-                <div class="flex justify-end gap-3 pt-4 border-t border-slate-700">
-                    <button type="button" onclick="closeModal('addPastSessionModal')" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2 rounded-lg text-sm font-medium transition">
-                        Cancel
-                    </button>
-                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2 rounded-lg text-sm font-medium transition shadow-md shadow-emerald-900/30">
-                        Save Session
-                    </button>
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" class="btn-close-modal px-4 py-2 rounded-xl bg-slate-700 text-slate-300 text-sm hover:bg-slate-600">Cancel</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-sm shadow-md">Begin Session</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Notification Toast -->
-    <div id="toast" class="fixed bottom-5 right-5 bg-emerald-600 text-white px-4 py-3 rounded-xl shadow-xl transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-2">
-        <i id="toastIcon" class="fa-solid fa-circle-check"></i>
-        <span id="toastMessage">Session saved successfully!</span>
+    <!-- MODAL: END ACTIVE SESSION -->
+    <div id="modal-stop-session" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
+            <div class="flex items-center justify-between border-b border-slate-700 pb-3">
+                <h3 class="font-bold text-lg text-white">End Active Session</h3>
+                <button class="btn-close-modal text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="form-stop-session" class="space-y-4">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Cash Out / End Wallet ($)</label>
+                        <input type="number" id="stop-wallet" step="0.01" min="0" placeholder="350.00" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Ending Hand #</label>
+                        <input type="number" id="stop-hands" step="1" min="0" placeholder="150" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Session Notes (Optional)</label>
+                    <textarea id="stop-notes" rows="3" placeholder="e.g. Played tight-aggressive, hit set over set on hand 45..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 resize-none"></textarea>
+                </div>
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" class="btn-close-modal px-4 py-2 rounded-xl bg-slate-700 text-slate-300 text-sm hover:bg-slate-600">Resume Playing</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-medium text-sm shadow-md">Complete & Save</button>
+                </div>
+            </form>
+        </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="bg-slate-900 border-t border-slate-800/80 py-4 text-center text-xs text-slate-500">
-        Poker Bankroll Tracker • Cloud Authenticated & Synchronized with Firestore
-    </footer>
+    <!-- MODAL: MANUAL PAST SESSION LOG -->
+    <div id="modal-manual-session" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-lg p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-slate-700 pb-3">
+                <h3 class="font-bold text-lg text-white">Log Past Session</h3>
+                <button class="btn-close-modal text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="form-manual-session" class="space-y-4">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Game Type</label>
+                        <select id="manual-game-type" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+                            <option value="NL Hold'em">NL Hold'em</option>
+                            <option value="PLO">Pot Limit Omaha (PLO)</option>
+                            <option value="PLO5">PLO 5-Card</option>
+                            <option value="Mixed Game">Mixed Game</option>
+                            <option value="Tournament">Tournament</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Stakes</label>
+                        <select id="manual-stakes" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+                            <option value="0.25/0.50">$0.25 / $0.50</option>
+                            <option value="0.50/1.00">$0.50 / $1.00</option>
+                            <option value="1.00/2.00" selected>$1.00 / $2.00</option>
+                            <option value="1.00/3.00">$1.00 / $3.00</option>
+                            <option value="2.00/5.00">$2.00 / $5.00</option>
+                            <option value="2.50/5.00">$2.50 / $5.00</option>
+                            <option value="5.00/10.00">$5.00 / $10.00</option>
+                            <option value="10.00/20.00">$10.00 / $20.00</option>
+                        </select>
+                    </div>
+                </div>
 
-    <!-- Firebase Modular SDK Script -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Start Time</label>
+                        <input type="datetime-local" id="manual-start-time" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs sm:text-sm text-white focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">End Time</label>
+                        <input type="datetime-local" id="manual-end-time" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs sm:text-sm text-white focus:outline-none focus:border-emerald-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Start Buy-In / Wallet ($)</label>
+                        <input type="number" id="manual-start-wallet" step="0.01" min="0" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">End Cash Out / Wallet ($)</label>
+                        <input type="number" id="manual-end-wallet" step="0.01" min="0" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Starting Hand #</label>
+                        <input type="number" id="manual-start-hands" step="1" min="0" value="0" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Ending Hand #</label>
+                        <input type="number" id="manual-end-hands" step="1" min="0" value="0" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Session Notes (Optional)</label>
+                    <textarea id="manual-notes" rows="3" placeholder="Notes on game flow, opponents, notable hands..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 resize-none"></textarea>
+                </div>
+
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" class="btn-close-modal px-4 py-2 rounded-xl bg-slate-700 text-slate-300 text-sm hover:bg-slate-600">Cancel</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-sm shadow-md">Save Session</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: EDIT SESSION -->
+    <div id="modal-edit-session" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-lg p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-slate-700 pb-3">
+                <h3 class="font-bold text-lg text-white">Edit Session Details</h3>
+                <button class="btn-close-modal text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="form-edit-session" class="space-y-4">
+                <input type="hidden" id="edit-session-id">
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Game Type</label>
+                        <select id="edit-game-type" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+                            <option value="NL Hold'em">NL Hold'em</option>
+                            <option value="PLO">Pot Limit Omaha (PLO)</option>
+                            <option value="PLO5">PLO 5-Card</option>
+                            <option value="Mixed Game">Mixed Game</option>
+                            <option value="Tournament">Tournament</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Stakes</label>
+                        <select id="edit-stakes" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+                            <option value="0.25/0.50">$0.25 / $0.50</option>
+                            <option value="0.50/1.00">$0.50 / $1.00</option>
+                            <option value="1.00/2.00">$1.00 / $2.00</option>
+                            <option value="1.00/3.00">$1.00 / $3.00</option>
+                            <option value="2.00/5.00">$2.00 / $5.00</option>
+                            <option value="2.50/5.00">$2.50 / $5.00</option>
+                            <option value="5.00/10.00">$5.00 / $10.00</option>
+                            <option value="10.00/20.00">$10.00 / $20.00</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Start Time</label>
+                        <input type="datetime-local" id="edit-start-time" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs sm:text-sm text-white focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">End Time</label>
+                        <input type="datetime-local" id="edit-end-time" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs sm:text-sm text-white focus:outline-none focus:border-emerald-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Start Buy-In / Wallet ($)</label>
+                        <input type="number" id="edit-start-wallet" step="0.01" min="0" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">End Cash Out / Wallet ($)</label>
+                        <input type="number" id="edit-end-wallet" step="0.01" min="0" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Starting Hand #</label>
+                        <input type="number" id="edit-start-hands" step="1" min="0" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Ending Hand #</label>
+                        <input type="number" id="edit-end-hands" step="1" min="0" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Session Notes</label>
+                    <textarea id="edit-notes" rows="3" placeholder="Notes..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 resize-none"></textarea>
+                </div>
+
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" class="btn-close-modal px-4 py-2 rounded-xl bg-slate-700 text-slate-300 text-sm hover:bg-slate-600">Cancel</button>
+                    <button type="button" id="btn-request-edit-confirm" class="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-medium text-sm shadow-md">Review Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: EDIT CONFIRMATION PROMPT -->
+    <div id="modal-edit-confirm" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop hidden">
+        <div class="bg-slate-800 border border-amber-500/40 rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
+            <div class="flex items-center space-x-3 text-amber-400">
+                <i class="fa-solid fa-triangle-exclamation text-2xl"></i>
+                <h3 class="font-bold text-lg text-white">Confirm Changes</h3>
+            </div>
+            <p class="text-sm text-slate-300 leading-relaxed">
+                Are you sure you want to save these edits? This will permanently update the session and recalculate your overall bankroll profit, hourly rate, and BB/100 stats.
+            </p>
+            <div class="flex justify-end space-x-2 pt-2">
+                <button type="button" id="btn-cancel-edit-confirm" class="px-4 py-2 rounded-xl bg-slate-700 text-slate-300 text-sm hover:bg-slate-600">Back to Edit</button>
+                <button type="button" id="btn-submit-edit-final" class="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-medium text-sm shadow-md">Confirm & Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: DELETE CONFIRMATION -->
+    <div id="modal-delete-confirm" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop hidden">
+        <div class="bg-slate-800 border border-rose-500/40 rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
+            <div class="flex items-center space-x-3 text-rose-400">
+                <i class="fa-solid fa-trash-can text-2xl"></i>
+                <h3 class="font-bold text-lg text-white">Delete Session</h3>
+            </div>
+            <p class="text-sm text-slate-300">
+                Are you sure you want to delete this session entry? This action cannot be undone.
+            </p>
+            <div class="flex justify-end space-x-2 pt-2">
+                <button type="button" class="btn-close-modal px-4 py-2 rounded-xl bg-slate-700 text-slate-300 text-sm hover:bg-slate-600">Cancel</button>
+                <button type="button" id="btn-confirm-delete" class="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-medium text-sm shadow-md">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK Imports -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { 
-            getAuth, 
-            signInAnonymously, 
-            signInWithCustomToken, 
-            signInWithPopup, 
-            GoogleAuthProvider, 
-            signOut, 
-            onAuthStateChanged 
-        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { 
-            getFirestore, 
-            doc, 
-            getDoc, 
-            setDoc, 
-            updateDoc, 
-            deleteDoc, 
-            collection, 
-            onSnapshot 
-        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithCustomToken, signInAnonymously, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Global Variables from Environment
+        // APP GLOBAL STATE
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'poker-bankroll-app';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-          apiKey: "AIzaSyDlPrrQt1qJh8hefVhdQaVyYPR6t9LS8wI",
-          authDomain: "poker-tracker-29f10.firebaseapp.com",
-          projectId: "poker-tracker-29f10",
-          storageBucket: "poker-tracker-29f10.firebasestorage.app",
-          messagingSenderId: "540593278406",
-          appId: "1:540593278406:web:789457710ddb9f4b0736c7"
-        };
+        let rawFirebaseConfig = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
+        
+        let firebaseConfig;
+        if (rawFirebaseConfig) {
+            firebaseConfig = JSON.parse(rawFirebaseConfig);
+        } else {
+            // Placeholder Firebase Config - Replace with your own from Firebase Console
+            firebaseConfig = {
+                apiKey: "AIzaSyDlPrrQt1qJh8hefVhdQaVyYPR6t9LS8wI",
+                authDomain: "poker-tracker-29f10.firebaseapp.com",
+                projectId: "poker-tracker-29f10",
+                storageBucket: "poker-tracker-29f10.firebasestorage.app",
+                messagingSenderId: "540593278406",
+                appId: "1:540593278406:web:789457710ddb9f4b0736c7"
+            };
+        }
 
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // App Application State
         let currentUser = null;
         let sessions = [];
-        let activeSession = null;
         let unsubscribeSessions = null;
-        let unsubscribeActiveSession = null;
+        let activeSessionTimerInterval = null;
+        let sessionToDeleteId = null;
+        let chartInstance = null;
 
-        // Firebase Auth Listener
-        onAuthStateChanged(auth, async (user) => {
-            const authScreen = document.getElementById('authScreen');
-            if (user) {
-                currentUser = user;
-                authScreen.classList.add('hidden');
-                
-                // Update User Display Header
-                document.getElementById('userDisplayName').textContent = user.isAnonymous ? `Guest (${user.uid.slice(0, 6)}...)` : (user.displayName || user.email || 'Logged In User');
-                document.getElementById('userStatusTag').textContent = user.isAnonymous ? 'Guest Account' : 'Cloud Sync Active';
+        // DOM ELEMENTS
+        const btnLogin = document.getElementById('btn-login');
+        const btnLogout = document.getElementById('btn-logout');
+        const userProfile = document.getElementById('user-profile');
+        const userAvatar = document.getElementById('user-avatar');
+        const userName = document.getElementById('user-name');
 
-                // Listen to Firestore real-time updates
-                subscribeToUserData(user.uid);
-            } else {
-                currentUser = null;
-                authScreen.classList.remove('hidden');
-                cleanupSubscriptions();
-            }
-        });
+        const activeBanner = document.getElementById('active-session-banner');
+        const activeGameType = document.getElementById('active-game-type');
+        const activeStakes = document.getElementById('active-stakes');
+        const activeStartTime = document.getElementById('active-start-time');
+        const activeTimer = document.getElementById('active-timer');
 
-        // Initialize Auth Action: Custom Token or Anonymous fallback
-        async function initializeAuth() {
+        const statTotalProfit = document.getElementById('stat-total-profit');
+        const statHourlyRate = document.getElementById('stat-hourly-rate');
+        const statBb100 = document.getElementById('stat-bb-100');
+        const statWinRate = document.getElementById('stat-win-rate');
+        const statSessionCount = document.getElementById('stat-session-count');
+        const tableBody = document.getElementById('session-table-body');
+        const tableCounter = document.getElementById('table-session-counter');
+
+        // AUTHENTICATION LOGIC
+        async function initAuth() {
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    // Default to anonymous if not logged in
+                    if (!auth.currentUser) {
+                        await signInAnonymously(auth);
+                    }
                 }
             } catch (err) {
-                console.warn('Initial token auth error:', err);
+                console.warn("Auth initialization fallback:", err);
             }
         }
 
-        initializeAuth();
-
-        // Login Helpers Exposed to Window
-        window.loginWithGoogle = async () => {
+        btnLogin.addEventListener('click', async () => {
+            const provider = new GoogleAuthProvider();
             try {
-                const provider = new GoogleAuthProvider();
                 await signInWithPopup(auth, provider);
             } catch (err) {
-                showAuthError(err.message || 'Google sign-in failed');
+                console.error("Login failed:", err);
             }
-        };
+        });
 
-        window.loginAnonymously = async () => {
+        btnLogout.addEventListener('click', async () => {
             try {
+                await signOut(auth);
                 await signInAnonymously(auth);
             } catch (err) {
-                showAuthError(err.message || 'Guest login failed');
+                console.error("Logout failed:", err);
             }
-        };
+        });
 
-        window.logoutUser = async () => {
-            if (confirm('Sign out of your bankroll tracker account?')) {
-                cleanupSubscriptions();
-                await signOut(auth);
+        onAuthStateChanged(auth, (user) => {
+            currentUser = user;
+            if (user && !user.isAnonymous) {
+                btnLogin.classList.add('hidden');
+                userProfile.classList.remove('hidden');
+                userProfile.classList.add('flex');
+                userAvatar.src = user.photoURL || 'https://placehold.co/100x100/334155/ffffff?text=User';
+                userName.textContent = user.displayName || 'Poker Player';
+            } else {
+                btnLogin.classList.remove('hidden');
+                userProfile.classList.add('hidden');
+                userProfile.classList.remove('flex');
             }
-        };
+            setupFirestoreListener();
+        });
 
-        function showAuthError(msg) {
-            const errEl = document.getElementById('authErrorMessage');
-            errEl.textContent = msg;
-            errEl.classList.remove('hidden');
-        }
-
-        function cleanupSubscriptions() {
+        // FIRESTORE SYNC
+        function setupFirestoreListener() {
             if (unsubscribeSessions) unsubscribeSessions();
-            if (unsubscribeActiveSession) unsubscribeActiveSession();
-            sessions = [];
-            activeSession = null;
-            renderSessionController();
-            renderTableAndStats();
-        }
+            if (!currentUser) return;
 
-        // Firestore Subscription for User Sessions (Private Collection Path)
-        function subscribeToUserData(userId) {
-            cleanupSubscriptions();
+            // Private Path Rule: /artifacts/{appId}/users/{userId}/sessions
+            const sessionsCol = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'sessions');
 
-            // RULE 1 Path Compliance: /artifacts/{appId}/users/{userId}/{collectionName}
-            const sessionsCol = collection(db, 'artifacts', appId, 'users', userId, 'sessions');
-            const activeSessionDoc = doc(db, 'artifacts', appId, 'users', userId, 'activeSession', 'current');
-
-            // Realtime Sync Sessions List
             unsubscribeSessions = onSnapshot(sessionsCol, (snapshot) => {
-                const items = [];
+                sessions = [];
                 snapshot.forEach(docSnap => {
-                    items.push({ id: docSnap.id, ...docSnap.data() });
+                    sessions.push({ id: docSnap.id, ...docSnap.data() });
                 });
-                // Sort chronologically descending
-                sessions = items.sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
-                renderSessionController();
-                renderTableAndStats();
-            }, (error) => {
-                console.error("Firestore sessions error:", error);
-            });
 
-            // Realtime Sync Active Session
-            unsubscribeActiveSession = onSnapshot(activeSessionDoc, (docSnap) => {
-                if (docSnap.exists()) {
-                    activeSession = docSnap.data();
-                } else {
-                    activeSession = null;
-                }
-                renderSessionController();
+                // Sort descending by startTime
+                sessions.sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
+
+                renderDashboard();
             }, (error) => {
-                console.error("Firestore active session error:", error);
+                console.error("Firestore listener error:", error);
             });
         }
 
-        // --- Core Application Logic & Firestore CRUD ---
-
-        // Utility: Format Date for input[type="datetime-local"]
-        function formatDateTimeLocal(dateStr) {
-            const date = dateStr ? new Date(dateStr) : new Date();
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            const hours = String(date.getHours()).padStart(2, '0');
-            const minutes = String(date.getMinutes()).padStart(2, '0');
-            return `${year}-${month}-${day}T${hours}:${minutes}`;
+        // RENDER FUNCTIONS
+        function renderDashboard() {
+            renderActiveSessionBanner();
+            renderStatsAndChart();
+            renderTable();
         }
 
-        function setDefaultDatetimeInputs() {
-            const now = formatDateTimeLocal();
-            const pastStart = document.getElementById('pastStartTime');
-            const pastStop = document.getElementById('pastStopTime');
-            if (pastStart) pastStart.value = now;
-            if (pastStop) pastStop.value = now;
-        }
-
-        // Render Active Session Banner OR Start Session Form
-        function renderSessionController() {
-            const container = document.getElementById('sessionContainer');
-            if (!container) return;
+        function renderActiveSessionBanner() {
+            const activeSession = sessions.find(s => s.status === 'active');
 
             if (activeSession) {
-                // ACTIVE SESSION UI
-                const startTimeFormatted = new Date(activeSession.startTime).toLocaleString([], {
-                    month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-                });
+                activeBanner.classList.remove('hidden');
+                activeGameType.textContent = activeSession.gameType;
+                activeStakes.textContent = `$${activeSession.stakes}`;
+                
+                const startDate = new Date(activeSession.startTime);
+                activeStartTime.textContent = startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' (' + startDate.toLocaleDateString() + ')';
 
-                container.innerHTML = `
-                    <div class="bg-gradient-to-r from-slate-900 via-emerald-950/40 to-slate-900 border-2 border-emerald-500/50 rounded-2xl p-5 sm:p-6 shadow-xl shadow-emerald-950/20 relative overflow-hidden">
-                        <div class="absolute top-0 right-0 transform translate-x-4 -translate-y-4 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
-                        
-                        <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-700/60 pb-4 mb-5">
-                            <div class="flex items-center gap-3">
-                                <span class="relative flex h-3 w-3">
-                                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                  <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-                                </span>
-                                <div>
-                                    <span class="text-xs font-bold text-emerald-400 uppercase tracking-widest">Active Session In Progress</span>
-                                    <h2 class="text-xl font-bold text-white">${activeSession.game} • ${activeSession.stakes}</h2>
-                                </div>
-                            </div>
-                            <div class="text-xs text-slate-400 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700">
-                                Started: <span class="text-slate-200 font-medium">${startTimeFormatted}</span>
-                            </div>
-                        </div>
-
-                        <!-- Reference Info -->
-                        <div class="grid grid-cols-2 sm:grid-cols-2 gap-3 mb-6 bg-slate-900/60 p-3.5 rounded-xl border border-slate-800 text-xs">
-                            <div>
-                                <span class="text-slate-400 block">Starting Hands:</span>
-                                <span class="text-white font-semibold text-sm">${activeSession.startHands.toLocaleString()}</span>
-                            </div>
-                            <div>
-                                <span class="text-slate-400 block">Starting Balance:</span>
-                                <span class="text-white font-semibold text-sm">$${parseFloat(activeSession.startBalance).toFixed(2)}</span>
-                            </div>
-                        </div>
-
-                        <!-- End Session Form -->
-                        <form onsubmit="handleEndSession(event)" class="space-y-4">
-                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Ending Lifetime Hands</label>
-                                    <input type="number" id="endHands" min="${activeSession.startHands}" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500" placeholder="e.g. ${(parseInt(activeSession.startHands) + 200)}">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Ending Wallet Balance ($)</label>
-                                    <input type="number" step="0.01" id="endBalance" min="0" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500" placeholder="e.g. ${(parseFloat(activeSession.startBalance) + 25.00).toFixed(2)}">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Stop Time</label>
-                                    <input type="datetime-local" id="stopTime" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
-                                </div>
-                            </div>
-                            <div class="flex gap-3 justify-end pt-2">
-                                <button type="button" onclick="cancelActiveSession()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-4 py-2 rounded-lg font-medium transition">
-                                    Discard Session
-                                </button>
-                                <button type="submit" class="bg-rose-600 hover:bg-rose-500 text-white text-sm px-6 py-2 rounded-lg font-bold transition shadow-lg shadow-rose-900/30 flex items-center gap-2">
-                                    <i class="fa-solid fa-flag-checkered"></i>
-                                    End Session
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                `;
-
-                // Set stopTime field default to current time
-                document.getElementById('stopTime').value = formatDateTimeLocal();
-
+                if (activeSessionTimerInterval) clearInterval(activeSessionTimerInterval);
+                
+                function updateTimer() {
+                    const now = new Date();
+                    const diffMs = now - new Date(activeSession.startTime);
+                    const hours = Math.floor(diffMs / (1000 * 60 * 60));
+                    const mins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                    const secs = Math.floor((diffMs % (1000 * 60)) / 1000);
+                    activeTimer.textContent = 
+                        String(hours).padStart(2, '0') + ':' + 
+                        String(mins).padStart(2, '0') + ':' + 
+                        String(secs).padStart(2, '0');
+                }
+                updateTimer();
+                activeSessionTimerInterval = setInterval(updateTimer, 1000);
             } else {
-                // START NEW SESSION UI
-                const defaultStartHand = sessions.length > 0 ? sessions[0].endHands : '';
-                const defaultStartBalance = sessions.length > 0 ? sessions[0].endBalance : '';
+                activeBanner.classList.add('hidden');
+                if (activeSessionTimerInterval) clearInterval(activeSessionTimerInterval);
+            }
+        }
 
-                container.innerHTML = `
-                    <div class="bg-slate-800/90 border border-slate-700/80 rounded-2xl p-5 sm:p-6 shadow-xl">
-                        <div class="flex items-center justify-between border-b border-slate-700/80 pb-3 mb-4">
-                            <h2 class="text-lg font-bold text-white flex items-center gap-2">
-                                <i class="fa-solid fa-play text-emerald-400"></i>
-                                Start New Live Session
-                            </h2>
-                            <span class="text-xs text-slate-400">Set start values & begin track</span>
-                        </div>
+        function renderStatsAndChart() {
+            const completedSessions = sessions.filter(s => s.status === 'completed');
 
-                        <form onsubmit="handleStartSession(event)" class="space-y-4">
-                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Game</label>
-                                    <select id="startGame" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
-                                        <option value="NLH">NLH</option>
-                                        <option value="PLO4">PLO4</option>
-                                    </select>
-                                </div>
+            let totalProfit = 0;
+            let totalHours = 0;
+            let totalHands = 0;
+            let totalBigBlindsWon = 0;
+            let winCount = 0;
 
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Stakes</label>
-                                    <select id="startStakes" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
-                                        <option value="$0.05/$0.10">$0.05 / $0.10 (10NL)</option>
-                                        <option value="$0.10/$0.20">$0.10 / $0.20 (20NL)</option>
-                                        <option value="$0.25/$0.50" selected>$0.25 / $0.50 (50NL)</option>
-                                        <option value="$0.50/$1.00">$0.50 / $1.00 (100NL)</option>
-                                        <option value="$1.00/$2.00">$1.00 / $2.00 (200NL)</option>
-                                    </select>
-                                </div>
+            const chartLabels = [];
+            const chartData = [];
+            let cumulativeBankroll = 0;
 
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Lifetime Hand Count</label>
-                                    <input type="number" id="startHands" min="0" required value="${defaultStartHand}" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500" placeholder="e.g. 10500">
-                                </div>
+            // Compute chronologically for the chart
+            const chronologicalSessions = [...completedSessions].reverse();
 
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Wallet Balance ($)</label>
-                                    <input type="number" step="0.01" id="startBalance" min="0" required value="${defaultStartBalance}" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500" placeholder="e.g. 250.00">
-                                </div>
+            chronologicalSessions.forEach(s => {
+                const profit = Number(s.profit) || 0;
+                totalProfit += profit;
+                cumulativeBankroll += profit;
 
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Start Time (Editable)</label>
-                                    <input type="datetime-local" id="startTime" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
-                                </div>
-                            </div>
+                const durationHours = Number(s.durationHours) || 0;
+                totalHours += durationHours;
 
-                            <div class="flex justify-between items-center pt-2">
-                                <p class="text-xs text-slate-400 hidden sm:block">
-                                    <i class="fa-solid fa-circle-info text-slate-500 mr-1"></i> Start time can be backdated if you forgot to start the session.
-                                </p>
-                                <button type="submit" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm px-6 py-2.5 rounded-lg transition shadow-lg shadow-emerald-900/30 flex items-center justify-center gap-2">
-                                    <i class="fa-solid fa-play text-xs"></i>
-                                    Start Session
-                                </button>
-                            </div>
-                        </form>
-                    </div>
+                const handCount = Number(s.handCount) || 0;
+                totalHands += handCount;
+
+                // Parse big blind from stakes string (e.g. "1.00/2.00")
+                const stakesParts = s.stakes.split('/');
+                const bbValue = stakesParts.length === 2 ? parseFloat(stakesParts[1]) : 2.0;
+                if (bbValue > 0) {
+                    totalBigBlindsWon += (profit / bbValue);
+                }
+
+                if (profit > 0) winCount++;
+
+                const d = new Date(s.endTime || s.startTime);
+                chartLabels.push(d.toLocaleDateString([], { month: 'short', day: 'numeric' }));
+                chartData.push(cumulativeBankroll);
+            });
+
+            // Update DOM Stat Cards
+            statTotalProfit.textContent = formatCurrency(totalProfit);
+            statTotalProfit.className = `text-xl sm:text-2xl font-bold mt-1 ${totalProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+
+            const hourly = totalHours > 0 ? (totalProfit / totalHours) : 0;
+            statHourlyRate.textContent = `${formatCurrency(hourly)}/hr`;
+            statHourlyRate.className = `text-xl sm:text-2xl font-bold mt-1 ${hourly >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+
+            const bb100 = totalHands > 0 ? ((totalBigBlindsWon / totalHands) * 100) : 0;
+            statBb100.textContent = bb100.toFixed(2);
+            statBb100.className = `text-xl sm:text-2xl font-bold mt-1 ${bb100 >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+
+            const winRate = completedSessions.length > 0 ? ((winCount / completedSessions.length) * 100).toFixed(0) : 0;
+            statWinRate.textContent = `${winRate}%`;
+            statSessionCount.textContent = `${completedSessions.length} completed session${completedSessions.length === 1 ? '' : 's'}`;
+
+            renderChart(chartLabels, chartData);
+        }
+
+        function renderChart(labels, data) {
+            const ctx = document.getElementById('bankrollChart').getContext('2d');
+            
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels.length ? labels : ['Start'],
+                    datasets: [{
+                        label: 'Bankroll Profit ($)',
+                        data: data.length ? data : [0],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `Bankroll: $${context.parsed.y.toFixed(2)}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(51, 65, 85, 0.4)' },
+                            ticks: { color: '#94a3b8', font: { size: 10 } }
+                        },
+                        y: {
+                            grid: { color: 'rgba(51, 65, 85, 0.4)' },
+                            ticks: { 
+                                color: '#94a3b8',
+                                font: { size: 10 },
+                                callback: value => '$' + value
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderTable() {
+            const completedSessions = sessions.filter(s => s.status === 'completed');
+            tableCounter.textContent = `${completedSessions.length} session${completedSessions.length === 1 ? '' : 's'} logged`;
+
+            if (completedSessions.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="10" class="py-8 text-center text-slate-500 italic">
+                            No session history found. Click "Start Live Session" or "Log Past Session" to get started!
+                        </td>
+                    </tr>
                 `;
-
-                // Set startTime field default to current time
-                document.getElementById('startTime').value = formatDateTimeLocal();
-            }
-        }
-
-        // Action: Start Active Session (Sync to Firestore)
-        window.handleStartSession = async (e) => {
-            e.preventDefault();
-            if (!currentUser) return;
-
-            const sessionData = {
-                game: document.getElementById('startGame').value,
-                stakes: document.getElementById('startStakes').value,
-                startHands: parseInt(document.getElementById('startHands').value),
-                startBalance: parseFloat(document.getElementById('startBalance').value),
-                startTime: new Date(document.getElementById('startTime').value).toISOString()
-            };
-
-            try {
-                const activeSessionDoc = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'activeSession', 'current');
-                await setDoc(activeSessionDoc, sessionData);
-                showToast('Session started and synced to cloud!', 'success');
-            } catch (err) {
-                console.error("Error starting session:", err);
-                showToast('Failed to start session on cloud', 'error');
-            }
-        };
-
-        // Action: End Active Session (Save to Firestore Sessions Collection)
-        window.handleEndSession = async (e) => {
-            e.preventDefault();
-            if (!currentUser || !activeSession) return;
-
-            const endHands = parseInt(document.getElementById('endHands').value);
-            const endBalance = parseFloat(document.getElementById('endBalance').value);
-            const stopTime = new Date(document.getElementById('stopTime').value).toISOString();
-
-            if (endHands < activeSession.startHands) {
-                showToast('Ending hand count cannot be lower than starting hand count', 'error');
                 return;
             }
 
-            const docId = Date.now().toString();
-            const completedSession = {
-                game: activeSession.game,
-                stakes: activeSession.stakes,
-                startTime: activeSession.startTime,
-                stopTime: stopTime,
-                startHands: activeSession.startHands,
-                endHands: endHands,
-                startBalance: activeSession.startBalance,
-                endBalance: endBalance
-            };
-
-            try {
-                // Save session to user's collection
-                const sessionDoc = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'sessions', docId);
-                await setDoc(sessionDoc, completedSession);
-
-                // Clear Active Session doc
-                const activeSessionDoc = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'activeSession', 'current');
-                await deleteDoc(activeSessionDoc);
-
-                showToast('Session logged to your cloud account!', 'success');
-            } catch (err) {
-                console.error("Error ending session:", err);
-                showToast('Failed to save completed session', 'error');
-            }
-        };
-
-        // Action: Discard/Cancel active session
-        window.cancelActiveSession = async () => {
-            if (!currentUser) return;
-            if (confirm('Are you sure you want to discard the active session without saving?')) {
-                try {
-                    const activeSessionDoc = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'activeSession', 'current');
-                    await deleteDoc(activeSessionDoc);
-                    showToast('Active session discarded', 'info');
-                } catch (err) {
-                    console.error("Error discarding session:", err);
-                }
-            }
-        };
-
-        // Action: Submit Past/Manual Session
-        window.handlePastSessionSubmit = async (e) => {
-            e.preventDefault();
-            if (!currentUser) return;
-
-            const startHands = parseInt(document.getElementById('pastStartHands').value);
-            const endHands = parseInt(document.getElementById('pastEndHands').value);
-
-            if (endHands < startHands) {
-                showToast('End hands must be greater or equal to start hands', 'error');
-                return;
-            }
-
-            const docId = Date.now().toString();
-            const newSession = {
-                game: document.getElementById('pastGame').value,
-                stakes: document.getElementById('pastStakes').value,
-                startTime: new Date(document.getElementById('pastStartTime').value).toISOString(),
-                stopTime: new Date(document.getElementById('pastStopTime').value).toISOString(),
-                startHands: startHands,
-                endHands: endHands,
-                startBalance: parseFloat(document.getElementById('pastStartBalance').value),
-                endBalance: parseFloat(document.getElementById('pastEndBalance').value)
-            };
-
-            try {
-                const sessionDoc = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'sessions', docId);
-                await setDoc(sessionDoc, newSession);
-                closeModal('addPastSessionModal');
-                showToast('Past session added successfully!', 'success');
-            } catch (err) {
-                console.error("Error saving past session:", err);
-                showToast('Error saving past session', 'error');
-            }
-        };
-
-        // Action: Delete Session Row from Firestore
-        window.deleteSession = async (id) => {
-            if (!currentUser) return;
-            if (confirm('Delete this session record?')) {
-                try {
-                    const sessionDoc = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'sessions', id.toString());
-                    await deleteDoc(sessionDoc);
-                    showToast('Session deleted', 'info');
-                } catch (err) {
-                    console.error("Error deleting session:", err);
-                    showToast('Failed to delete session', 'error');
-                }
-            }
-        };
-
-        // Calculation Helpers
-        function getBigBlindValue(stakesStr) {
-            const parts = stakesStr.split('/');
-            if (parts.length === 2) {
-                return parseFloat(parts[1].replace('$', '')) || 1.0;
-            }
-            return 1.0;
-        }
-
-        // Render Table & Update Statistics Overview Cards
-        function renderTableAndStats() {
-            const tableBody = document.getElementById('historyTableBody');
-            const emptyState = document.getElementById('emptyState');
-            const badge = document.getElementById('sessionCountBadge');
-
-            if (!tableBody || !badge) return;
-
-            badge.textContent = `${sessions.length} session${sessions.length !== 1 ? 's' : ''}`;
-
-            if (sessions.length === 0) {
-                tableBody.innerHTML = '';
-                emptyState.classList.remove('hidden');
-                updateDashboardStats(0, 0, 0, 0, 0);
-                return;
-            }
-
-            emptyState.classList.add('hidden');
-
-            let totalNetProfit = 0;
-            let totalHandsPlayed = 0;
-            let totalHoursPlayed = 0;
-            let totalBBWon = 0;
-
-            let html = '';
-
-            sessions.forEach(s => {
+            tableBody.innerHTML = completedSessions.map(s => {
                 const start = new Date(s.startTime);
-                const stop = new Date(s.stopTime);
-                const durationMs = Math.max(0, stop - start);
-                const durationHours = durationMs / (1000 * 60 * 60);
+                const end = new Date(s.endTime);
+                const dateStr = start.toLocaleDateString([], { month: 'short', day: 'numeric', year: '2-digit' });
+                const timeStr = `${start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
 
-                const handsPlayed = Math.max(0, s.endHands - s.startHands);
-                const netProfit = s.endBalance - s.startBalance;
-                const bbValue = getBigBlindValue(s.stakes);
-                const bbWon = bbValue > 0 ? (netProfit / bbValue) : 0;
+                const profit = Number(s.profit) || 0;
+                const durationHours = Number(s.durationHours) || 0;
+                const hourly = durationHours > 0 ? profit / durationHours : 0;
+                const handCount = Number(s.handCount) || 0;
 
-                const hourlyRate = durationHours > 0 ? (netProfit / durationHours) : 0;
-                const bb100Rate = handsPlayed > 0 ? ((bbWon / handsPlayed) * 100) : 0;
+                const stakesParts = s.stakes.split('/');
+                const bbValue = stakesParts.length === 2 ? parseFloat(stakesParts[1]) : 2.0;
+                const bb100 = handCount > 0 ? ((profit / bbValue) / handCount) * 100 : 0;
 
-                // Accumulate totals
-                totalNetProfit += netProfit;
-                totalHandsPlayed += handsPlayed;
-                totalHoursPlayed += durationHours;
-                totalBBWon += bbWon;
+                const profitClass = profit >= 0 ? 'text-emerald-400 font-semibold' : 'text-rose-400 font-semibold';
+                const notesSnippet = s.notes ? (s.notes.length > 20 ? s.notes.substring(0, 20) + '...' : s.notes) : '-';
 
-                // Profit color styling
-                const profitClass = netProfit > 0 ? 'text-emerald-400' : (netProfit < 0 ? 'text-rose-400' : 'text-slate-300');
-                const profitSign = netProfit > 0 ? '+' : '';
-
-                // Formatted Duration
-                const hrs = Math.floor(durationHours);
-                const mins = Math.round((durationHours - hrs) * 60);
-                const durationStr = `${hrs}h ${mins}m`;
-
-                html += `
-                    <tr class="hover:bg-slate-800/50 transition border-b border-slate-700/40">
-                        <td class="py-3 px-4 font-medium whitespace-nowrap">
-                            <div>${start.toLocaleDateString([], { month: 'short', day: 'numeric', year: '2-digit' })}</div>
-                            <div class="text-xs text-slate-500">${start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                return `
+                    <tr class="hover:bg-slate-800/50 transition">
+                        <td class="py-3 px-4">
+                            <div class="font-medium text-slate-200">${dateStr}</div>
+                            <div class="text-[10px] text-slate-400">${timeStr}</div>
                         </td>
-                        <td class="py-3 px-4 whitespace-nowrap text-slate-300">${durationStr}</td>
-                        <td class="py-3 px-4 whitespace-nowrap font-semibold">
-                            <span class="px-2 py-0.5 rounded text-xs font-semibold ${s.game === 'NLH' ? 'bg-blue-900/60 text-blue-300 border border-blue-700/50' : 'bg-purple-900/60 text-purple-300 border border-purple-700/50'}">
-                                ${s.game}
-                            </span>
+                        <td class="py-3 px-4 font-medium text-slate-300">${escapeHtml(s.gameType)}</td>
+                        <td class="py-3 px-4 text-emerald-300">$${escapeHtml(s.stakes)}</td>
+                        <td class="py-3 px-4 text-slate-300">${durationHours.toFixed(1)} hrs</td>
+                        <td class="py-3 px-4 text-slate-400">${handCount}</td>
+                        <td class="py-3 px-4 ${profitClass}">${formatCurrency(profit)}</td>
+                        <td class="py-3 px-4 text-slate-300">${formatCurrency(hourly)}/hr</td>
+                        <td class="py-3 px-4 text-slate-300">${bb100.toFixed(1)}</td>
+                        <td class="py-3 px-4 text-slate-400 max-w-[150px] truncate" title="${escapeHtml(s.notes || '')}">
+                            ${escapeHtml(notesSnippet)}
                         </td>
-                        <td class="py-3 px-4 whitespace-nowrap font-mono text-slate-300">${s.stakes}</td>
-                        <td class="py-3 px-4 text-right font-mono whitespace-nowrap">
-                            <span class="text-slate-200">${handsPlayed.toLocaleString()}</span>
-                            <div class="text-xs text-slate-500">${s.startHands} → ${s.endHands}</div>
-                        </td>
-                        <td class="py-3 px-4 text-right font-mono whitespace-nowrap">
-                            <div class="text-slate-300">$${parseFloat(s.endBalance).toFixed(2)}</div>
-                            <div class="text-xs text-slate-500">Start: $${parseFloat(s.startBalance).toFixed(2)}</div>
-                        </td>
-                        <td class="py-3 px-4 text-right font-mono font-bold ${profitClass} whitespace-nowrap text-base">
-                            ${profitSign}$${netProfit.toFixed(2)}
-                        </td>
-                        <td class="py-3 px-4 text-right font-mono whitespace-nowrap">
-                            <div class="${profitClass}">${profitSign}$${hourlyRate.toFixed(2)}/hr</div>
-                            <div class="text-xs text-slate-400">${bb100Rate.toFixed(1)} bb/100</div>
-                        </td>
-                        <td class="py-3 px-4 text-center whitespace-nowrap">
-                            <button onclick="deleteSession('${s.id}')" class="text-slate-500 hover:text-rose-400 p-1.5 transition rounded-lg hover:bg-slate-700/50" title="Delete Session">
-                                <i class="fa-solid fa-trash-can text-sm"></i>
+                        <td class="py-3 px-4 text-right space-x-1">
+                            <button onclick="window.openEditModal('${s.id}')" class="p-1.5 text-slate-400 hover:text-amber-400 transition rounded-lg hover:bg-slate-700/60" title="Edit Session">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                            <button onclick="window.openDeleteModal('${s.id}')" class="p-1.5 text-slate-400 hover:text-rose-400 transition rounded-lg hover:bg-slate-700/60" title="Delete Session">
+                                <i class="fa-solid fa-trash-can"></i>
                             </button>
                         </td>
                     </tr>
                 `;
-            });
-
-            tableBody.innerHTML = html;
-
-            const overallHourlyRate = totalHoursPlayed > 0 ? (totalNetProfit / totalHoursPlayed) : 0;
-            const overallBB100 = totalHandsPlayed > 0 ? ((totalBBWon / totalHandsPlayed) * 100) : 0;
-
-            updateDashboardStats(totalNetProfit, totalHandsPlayed, totalHoursPlayed, overallHourlyRate, overallBB100);
+            }).join('');
         }
 
-        // Update Stat Cards UI
-        function updateDashboardStats(profit, hands, hours, hourlyRate, bb100) {
-            const profitEl = document.getElementById('statNetProfit');
-            const handsEl = document.getElementById('statTotalHands');
-            const hoursEl = document.getElementById('statTotalHours');
-            const rateEl = document.getElementById('statHourlyRate');
-            const bb100El = document.getElementById('statBB100');
+        // MODAL MANAGEMENT & EVENT LISTENERS
+        const modalStart = document.getElementById('modal-start-session');
+        const modalStop = document.getElementById('modal-stop-session');
+        const modalManual = document.getElementById('modal-manual-session');
+        const modalEdit = document.getElementById('modal-edit-session');
+        const modalEditConfirm = document.getElementById('modal-edit-confirm');
+        const modalDeleteConfirm = document.getElementById('modal-delete-confirm');
 
-            if (!profitEl) return;
-
-            profitEl.textContent = `${profit >= 0 ? '+' : ''}$${profit.toFixed(2)}`;
-            profitEl.className = `text-xl sm:text-2xl font-bold mt-1 ${profit > 0 ? 'text-emerald-400' : (profit < 0 ? 'text-rose-400' : 'text-slate-200')}`;
-
-            handsEl.textContent = hands.toLocaleString();
-            hoursEl.textContent = `${hours.toFixed(1)} hrs`;
-            
-            rateEl.textContent = `${hourlyRate >= 0 ? '+' : ''}$${hourlyRate.toFixed(2)}/hr`;
-            rateEl.className = `text-xl sm:text-2xl font-bold mt-1 ${hourlyRate > 0 ? 'text-emerald-400' : (hourlyRate < 0 ? 'text-rose-400' : 'text-slate-200')}`;
-
-            bb100El.textContent = `${bb100 >= 0 ? '+' : ''}${bb100.toFixed(2)} bb/100`;
-            bb100El.className = `text-xl sm:text-2xl font-bold mt-1 ${bb100 > 0 ? 'text-emerald-400' : (bb100 < 0 ? 'text-rose-400' : 'text-slate-200')}`;
-        }
-
-        // Export Session History to CSV
-        window.exportToCSV = () => {
-            if (sessions.length === 0) {
-                showToast('No session data available to export', 'error');
+        document.getElementById('btn-start-session-modal').addEventListener('click', () => {
+            const hasActive = sessions.some(s => s.status === 'active');
+            if (hasActive) {
+                alert("You already have an active live session in progress!");
                 return;
             }
+            modalStart.classList.remove('hidden');
+        });
 
-            const headers = [
-                'Session ID',
-                'Game',
-                'Stakes',
-                'Start Time',
-                'Stop Time',
-                'Duration (Hours)',
-                'Start Lifetime Hands',
-                'End Lifetime Hands',
-                'Hands Played',
-                'Start Balance ($)',
-                'End Balance ($)',
-                'Net Profit ($)',
-                'Hourly Rate ($/hr)',
-                'bb/100 Rate'
-            ];
+        document.getElementById('btn-open-stop-modal').addEventListener('click', () => {
+            modalStop.classList.remove('hidden');
+        });
 
-            const rows = sessions.map(s => {
-                const start = new Date(s.startTime);
-                const stop = new Date(s.stopTime);
-                const durationHours = Math.max(0, (stop - start) / (1000 * 60 * 60));
-                const handsPlayed = Math.max(0, s.endHands - s.startHands);
-                const netProfit = s.endBalance - s.startBalance;
-                const bbValue = getBigBlindValue(s.stakes);
-                const bbWon = bbValue > 0 ? (netProfit / bbValue) : 0;
-                const hourlyRate = durationHours > 0 ? (netProfit / durationHours) : 0;
-                const bb100Rate = handsPlayed > 0 ? ((bbWon / handsPlayed) * 100) : 0;
-
-                return [
-                    s.id,
-                    `"${s.game}"`,
-                    `"${s.stakes}"`,
-                    `"${start.toLocaleString()}"`,
-                    `"${stop.toLocaleString()}"`,
-                    durationHours.toFixed(2),
-                    s.startHands,
-                    s.endHands,
-                    handsPlayed,
-                    s.startBalance.toFixed(2),
-                    s.endBalance.toFixed(2),
-                    netProfit.toFixed(2),
-                    hourlyRate.toFixed(2),
-                    bb100Rate.toFixed(2)
-                ];
-            });
-
-            const csvContent = 'data:text/csv;charset=utf-8,' 
-                + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
-
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement('a');
-            link.setAttribute('href', encodedUri);
-            link.setAttribute('download', `poker_bankroll_history_${new Date().toISOString().slice(0,10)}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-
-            showToast('CSV export downloaded!', 'success');
-        };
-
-        // Preload Sample Data into User's Account
-        window.loadSampleData = async () => {
-            if (!currentUser) return;
-            if (sessions.length > 0 && !confirm('Loading sample data will add sample records to your current account. Continue?')) {
-                return;
-            }
-
+        document.getElementById('btn-manual-entry-modal').addEventListener('click', () => {
+            // Default datetimes to recent 2 hours
             const now = new Date();
-            const sampleSessions = [
-                {
-                    id: (Date.now() - 1000000).toString(),
-                    game: 'NLH',
-                    stakes: '$0.25/$0.50',
-                    startTime: new Date(now.getTime() - 24 * 3600 * 1000).toISOString(),
-                    stopTime: new Date(now.getTime() - 21.5 * 3600 * 1000).toISOString(),
-                    startHands: 12500,
-                    endHands: 13120,
-                    startBalance: 300.00,
-                    endBalance: 382.50
-                },
-                {
-                    id: (Date.now() - 2000000).toString(),
-                    game: 'PLO4',
-                    stakes: '$0.10/$0.20',
-                    startTime: new Date(now.getTime() - 48 * 3600 * 1000).toISOString(),
-                    stopTime: new Date(now.getTime() - 46 * 3600 * 1000).toISOString(),
-                    startHands: 12000,
-                    endHands: 12500,
-                    startBalance: 250.00,
-                    endBalance: 228.00
-                },
-                {
-                    id: (Date.now() - 3000000).toString(),
-                    game: 'NLH',
-                    stakes: '$0.25/$0.50',
-                    startTime: new Date(now.getTime() - 72 * 3600 * 1000).toISOString(),
-                    stopTime: new Date(now.getTime() - 68.5 * 3600 * 1000).toISOString(),
-                    startHands: 11100,
-                    endHands: 12000,
-                    startBalance: 180.00,
-                    endBalance: 250.00
-                }
-            ];
+            const twoHoursAgo = new Date(now.getTime() - (2 * 60 * 60 * 1000));
+            
+            document.getElementById('manual-start-time').value = formatDateForInput(twoHoursAgo);
+            document.getElementById('manual-end-time').value = formatDateForInput(now);
+            modalManual.classList.remove('hidden');
+        });
+
+        // Close modal handlers
+        document.querySelectorAll('.btn-close-modal').forEach(btn => {
+            btn.addEventListener('click', () => {
+                modalStart.classList.add('hidden');
+                modalStop.classList.add('hidden');
+                modalManual.classList.add('hidden');
+                modalEdit.classList.add('hidden');
+                modalDeleteConfirm.classList.add('hidden');
+            });
+        });
+
+        // SUBMIT LIVE SESSION START
+        document.getElementById('form-start-session').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!currentUser) return;
+
+            const gameType = document.getElementById('start-game-type').value;
+            const stakes = document.getElementById('start-stakes').value;
+            const wallet = parseFloat(document.getElementById('start-wallet').value) || 0;
+            const hands = parseInt(document.getElementById('start-hands').value) || 0;
+
+            const newSession = {
+                gameType,
+                stakes,
+                startWallet: wallet,
+                startHands: hands,
+                startTime: new Date().toISOString(),
+                status: 'active'
+            };
 
             try {
-                for (const item of sampleSessions) {
-                    const sessionDoc = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'sessions', item.id);
-                    await setDoc(sessionDoc, item);
-                }
-                showToast('Sample session data loaded to your account', 'success');
+                const sessionsCol = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'sessions');
+                await addDoc(sessionsCol, newSession);
+                modalStart.classList.add('hidden');
+                document.getElementById('form-start-session').reset();
             } catch (err) {
-                console.error("Error loading sample data:", err);
+                console.error("Error starting session:", err);
             }
-        };
+        });
 
-        // Reset All Data in User Account
-        window.clearData = async () => {
+        // SUBMIT LIVE SESSION END
+        document.getElementById('form-stop-session').addEventListener('submit', async (e) => {
+            e.preventDefault();
             if (!currentUser) return;
-            if (confirm('Are you sure you want to delete all session history from your account?')) {
-                try {
-                    for (const s of sessions) {
-                        const sessionDoc = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'sessions', s.id);
-                        await deleteDoc(sessionDoc);
-                    }
-                    if (activeSession) {
-                        const activeSessionDoc = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'activeSession', 'current');
-                        await deleteDoc(activeSessionDoc);
-                    }
-                    showToast('All bankroll data removed from cloud', 'info');
-                } catch (err) {
-                    console.error("Error clearing data:", err);
-                }
+
+            const activeSession = sessions.find(s => s.status === 'active');
+            if (!activeSession) return;
+
+            const endWallet = parseFloat(document.getElementById('stop-wallet').value) || 0;
+            const endHands = parseInt(document.getElementById('stop-hands').value) || activeSession.startHands;
+            const notes = document.getElementById('stop-notes').value.trim();
+            const endTime = new Date().toISOString();
+
+            const startMs = new Date(activeSession.startTime).getTime();
+            const endMs = new Date(endTime).getTime();
+            const durationHours = Math.max((endMs - startMs) / (1000 * 60 * 60), 0.01);
+
+            const profit = endWallet - activeSession.startWallet;
+            const handCount = Math.max(endHands - (activeSession.startHands || 0), 0);
+
+            const sessionRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'sessions', activeSession.id);
+            
+            try {
+                await updateDoc(sessionRef, {
+                    endWallet,
+                    endHands,
+                    endTime,
+                    durationHours,
+                    profit,
+                    handCount,
+                    notes,
+                    status: 'completed'
+                });
+                modalStop.classList.add('hidden');
+                document.getElementById('form-stop-session').reset();
+            } catch (err) {
+                console.error("Error completing session:", err);
             }
-        };
+        });
 
-        // Modal Helpers
-        window.openModal = (id) => {
-            setDefaultDatetimeInputs();
-            document.getElementById(id).classList.remove('hidden');
-            document.getElementById(id).classList.add('flex');
-        };
+        // SUBMIT MANUAL SESSION LOG
+        document.getElementById('form-manual-session').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!currentUser) return;
 
-        window.closeModal = (id) => {
-            document.getElementById(id).classList.add('hidden');
-            document.getElementById(id).classList.remove('flex');
-        };
+            const gameType = document.getElementById('manual-game-type').value;
+            const stakes = document.getElementById('manual-stakes').value;
+            const startTimeStr = document.getElementById('manual-start-time').value;
+            const endTimeStr = document.getElementById('manual-end-time').value;
+            const startWallet = parseFloat(document.getElementById('manual-start-wallet').value) || 0;
+            const endWallet = parseFloat(document.getElementById('manual-end-wallet').value) || 0;
+            const startHands = parseInt(document.getElementById('manual-start-hands').value) || 0;
+            const endHands = parseInt(document.getElementById('manual-end-hands').value) || 0;
+            const notes = document.getElementById('manual-notes').value.trim();
 
-        // Toast Feedback System
-        function showToast(message, type = 'success') {
-            const toast = document.getElementById('toast');
-            const toastMsg = document.getElementById('toastMessage');
-            const toastIcon = document.getElementById('toastIcon');
+            const startTime = new Date(startTimeStr).toISOString();
+            const endTime = new Date(endTimeStr).toISOString();
 
-            if (!toast) return;
-
-            toastMsg.textContent = message;
-
-            if (type === 'error') {
-                toast.className = 'fixed bottom-5 right-5 bg-rose-600 text-white px-4 py-3 rounded-xl shadow-xl transform transition-all duration-300 z-50 flex items-center gap-2';
-                toastIcon.className = 'fa-solid fa-triangle-exclamation';
-            } else if (type === 'info') {
-                toast.className = 'fixed bottom-5 right-5 bg-slate-700 text-white px-4 py-3 rounded-xl shadow-xl transform transition-all duration-300 z-50 flex items-center gap-2';
-                toastIcon.className = 'fa-solid fa-circle-info';
-            } else {
-                toast.className = 'fixed bottom-5 right-5 bg-emerald-600 text-white px-4 py-3 rounded-xl shadow-xl transform transition-all duration-300 z-50 flex items-center gap-2';
-                toastIcon.className = 'fa-solid fa-circle-check';
+            const startMs = new Date(startTime).getTime();
+            const endMs = new Date(endTime).getTime();
+            if (endMs <= startMs) {
+                alert("End time must be after start time!");
+                return;
             }
 
-            toast.classList.remove('translate-y-20', 'opacity-0');
-            toast.classList.add('translate-y-0', 'opacity-100');
+            const durationHours = (endMs - startMs) / (1000 * 60 * 60);
+            const profit = endWallet - startWallet;
+            const handCount = Math.max(endHands - startHands, 0);
 
-            setTimeout(() => {
-                toast.classList.remove('translate-y-0', 'opacity-100');
-                toast.classList.add('translate-y-20', 'opacity-0');
-            }, 3000);
+            const manualSession = {
+                gameType,
+                stakes,
+                startTime,
+                endTime,
+                startWallet,
+                endWallet,
+                startHands,
+                endHands,
+                durationHours,
+                profit,
+                handCount,
+                notes,
+                status: 'completed'
+            };
+
+            try {
+                const sessionsCol = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'sessions');
+                await addDoc(sessionsCol, manualSession);
+                modalManual.classList.add('hidden');
+                document.getElementById('form-manual-session').reset();
+            } catch (err) {
+                console.error("Error adding manual session:", err);
+            }
+        });
+
+        // OPEN EDIT SESSION MODAL
+        window.openEditModal = function(id) {
+            const session = sessions.find(s => s.id === id);
+            if (!session) return;
+
+            document.getElementById('edit-session-id').value = session.id;
+            document.getElementById('edit-game-type').value = session.gameType || "NL Hold'em";
+            document.getElementById('edit-stakes').value = session.stakes || "1.00/2.00";
+            
+            document.getElementById('edit-start-time').value = formatDateForInput(new Date(session.startTime));
+            document.getElementById('edit-end-time').value = formatDateForInput(new Date(session.endTime || session.startTime));
+            
+            document.getElementById('edit-start-wallet').value = session.startWallet ?? 0;
+            document.getElementById('edit-end-wallet').value = session.endWallet ?? 0;
+            document.getElementById('edit-start-hands').value = session.startHands ?? 0;
+            document.getElementById('edit-end-hands').value = session.endHands ?? 0;
+            document.getElementById('edit-notes').value = session.notes || '';
+
+            modalEdit.classList.remove('hidden');
+        };
+
+        // REQUEST EDIT CONFIRMATION PROMPT
+        document.getElementById('btn-request-edit-confirm').addEventListener('click', () => {
+            const startTimeStr = document.getElementById('edit-start-time').value;
+            const endTimeStr = document.getElementById('edit-end-time').value;
+
+            if (new Date(endTimeStr) <= new Date(startTimeStr)) {
+                alert("End time must be after start time!");
+                return;
+            }
+
+            modalEditConfirm.classList.remove('hidden');
+        });
+
+        document.getElementById('btn-cancel-edit-confirm').addEventListener('click', () => {
+            modalEditConfirm.classList.add('hidden');
+        });
+
+        // FINAL SUBMIT SESSION EDITS
+        document.getElementById('btn-submit-edit-final').addEventListener('click', async () => {
+            if (!currentUser) return;
+
+            const id = document.getElementById('edit-session-id').value;
+            const gameType = document.getElementById('edit-game-type').value;
+            const stakes = document.getElementById('edit-stakes').value;
+            const startTimeStr = document.getElementById('edit-start-time').value;
+            const endTimeStr = document.getElementById('edit-end-time').value;
+            const startWallet = parseFloat(document.getElementById('edit-start-wallet').value) || 0;
+            const endWallet = parseFloat(document.getElementById('edit-end-wallet').value) || 0;
+            const startHands = parseInt(document.getElementById('edit-start-hands').value) || 0;
+            const endHands = parseInt(document.getElementById('edit-end-hands').value) || 0;
+            const notes = document.getElementById('edit-notes').value.trim();
+
+            const startTime = new Date(startTimeStr).toISOString();
+            const endTime = new Date(endTimeStr).toISOString();
+
+            const startMs = new Date(startTime).getTime();
+            const endMs = new Date(endTime).getTime();
+            const durationHours = Math.max((endMs - startMs) / (1000 * 60 * 60), 0.01);
+            const profit = endWallet - startWallet;
+            const handCount = Math.max(endHands - startHands, 0);
+
+            const sessionRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'sessions', id);
+
+            try {
+                await updateDoc(sessionRef, {
+                    gameType,
+                    stakes,
+                    startTime,
+                    endTime,
+                    startWallet,
+                    endWallet,
+                    startHands,
+                    endHands,
+                    durationHours,
+                    profit,
+                    handCount,
+                    notes
+                });
+
+                modalEditConfirm.classList.add('hidden');
+                modalEdit.classList.add('hidden');
+            } catch (err) {
+                console.error("Error updating session:", err);
+            }
+        });
+
+        // OPEN DELETE CONFIRMATION MODAL
+        window.openDeleteModal = function(id) {
+            sessionToDeleteId = id;
+            modalDeleteConfirm.classList.remove('hidden');
+        };
+
+        document.getElementById('btn-confirm-delete').addEventListener('click', async () => {
+            if (!currentUser || !sessionToDeleteId) return;
+
+            const sessionRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'sessions', sessionToDeleteId);
+            try {
+                await deleteDoc(sessionRef);
+                sessionToDeleteId = null;
+                modalDeleteConfirm.classList.add('hidden');
+            } catch (err) {
+                console.error("Error deleting session:", err);
+            }
+        });
+
+        // EXPORT CSV
+        document.getElementById('btn-export-csv').addEventListener('click', () => {
+            const completedSessions = sessions.filter(s => s.status === 'completed');
+            if (completedSessions.length === 0) {
+                alert("No completed sessions to export!");
+                return;
+            }
+
+            let csv = 'Date,Game,Stakes,Start Time,End Time,Duration (Hrs),Start Wallet ($),End Wallet ($),Net Profit ($),Hands Played,Notes\n';
+
+            completedSessions.forEach(s => {
+                const start = new Date(s.startTime).toLocaleString();
+                const end = new Date(s.endTime).toLocaleString();
+                const cleanNotes = (s.notes || '').replace(/"/g, '""');
+
+                csv += `"${start}","${s.gameType}","${s.stakes}","${start}","${end}",${s.durationHours.toFixed(2)},${s.startWallet},${s.endWallet},${s.profit},${s.handCount || 0},"${cleanNotes}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('href', url);
+            a.setAttribute('download', `poker_sessions_${new Date().toISOString().slice(0,10)}.csv`);
+            a.click();
+        });
+
+        // HELPERS
+        function formatCurrency(val) {
+            const num = Number(val) || 0;
+            const formatted = Math.abs(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            return num < 0 ? `-$${formatted}` : `$${formatted}`;
         }
+
+        function formatDateForInput(date) {
+            const pad = num => String(num).padStart(2, '0');
+            return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        // Initialize on Load
+        initAuth();
     </script>
 </body>
 </html>
