@@ -126,11 +126,11 @@
         </div>
       </div>
 
-      <!-- Logs Section Tabs / Tables -->
+      <!-- Unified Activity Table (Sessions & Transactions Combined) -->
       <div class="bg-gray-800 rounded-xl border border-gray-700 shadow-md overflow-hidden">
         <div class="p-4 border-b border-gray-700 flex justify-between items-center bg-gray-850">
-          <h3 class="text-lg font-bold text-gray-100">Logged Sessions</h3>
-          <span id="sessionCount" class="text-xs bg-gray-700 text-gray-300 px-2.5 py-1 rounded-full font-medium">0 sessions</span>
+          <h3 class="text-lg font-bold text-gray-100">Activity & Session History</h3>
+          <span id="activityCount" class="text-xs bg-gray-700 text-gray-300 px-2.5 py-1 rounded-full font-medium">0 entries</span>
         </div>
 
         <div class="overflow-x-auto">
@@ -138,45 +138,18 @@
             <thead class="bg-gray-900 text-gray-400 uppercase text-xs tracking-wider border-b border-gray-700">
               <tr>
                 <th class="py-3 px-4">Date</th>
-                <th class="py-3 px-4">Game / Stakes</th>
+                <th class="py-3 px-4">Activity Type</th>
                 <th class="py-3 px-4">Duration</th>
                 <th class="py-3 px-4">Hands</th>
-                <th class="py-3 px-4">Starting Wallet</th>
-                <th class="py-3 px-4">Ending Wallet</th>
-                <th class="py-3 px-4">Net Profit</th>
+                <th class="py-3 px-4">Net Profit / Amount</th>
                 <th class="py-3 px-4">Hourly</th>
-                <th class="py-3 px-4">Notes</th>
+                <th class="py-3 px-4">Notes / Description</th>
                 <th class="py-3 px-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody id="sessionsTableBody" class="divide-y divide-gray-700">
+            <tbody id="activityTableBody" class="divide-y divide-gray-700">
               <tr>
-                <td colspan="10" class="py-8 text-center text-gray-500">No recorded poker sessions found.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Bankroll Adjustments Log Table -->
-      <div class="bg-gray-800 rounded-xl border border-gray-700 shadow-md overflow-hidden">
-        <div class="p-4 border-b border-gray-700 flex justify-between items-center">
-          <h3 class="text-lg font-bold text-gray-100">Bankroll Deposits & Withdrawals</h3>
-        </div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-sm text-gray-300">
-            <thead class="bg-gray-900 text-gray-400 uppercase text-xs tracking-wider border-b border-gray-700">
-              <tr>
-                <th class="py-3 px-4">Date & Time</th>
-                <th class="py-3 px-4">Type</th>
-                <th class="py-3 px-4">Amount</th>
-                <th class="py-3 px-4">Note / Reason</th>
-                <th class="py-3 px-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody id="transactionsTableBody" class="divide-y divide-gray-700">
-              <tr>
-                <td colspan="5" class="py-6 text-center text-gray-500">No bankroll deposits or withdrawals logged.</td>
+                <td colspan="8" class="py-8 text-center text-gray-500">No recorded sessions or transactions found.</td>
               </tr>
             </tbody>
           </table>
@@ -209,7 +182,6 @@
           <p id="handWarningText" class="text-xs text-amber-400 mt-1 hidden"></p>
         </div>
         
-        <!-- Collapsible Time Override -->
         <div class="pt-1 border-t border-gray-700">
           <label class="flex items-center space-x-2 cursor-pointer text-xs font-medium text-gray-400">
             <input type="checkbox" id="toggleStartOverride" class="rounded bg-gray-900 border-gray-700 text-indigo-600 focus:ring-indigo-500">
@@ -242,7 +214,6 @@
           <input type="number" id="endHandNum" required class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500" placeholder="e.g. 10850">
         </div>
         
-        <!-- Collapsible Time Override -->
         <div class="pt-1 border-t border-gray-700">
           <label class="flex items-center space-x-2 cursor-pointer text-xs font-medium text-gray-400">
             <input type="checkbox" id="toggleEndOverride" class="rounded bg-gray-900 border-gray-700 text-indigo-600 focus:ring-indigo-500">
@@ -293,7 +264,7 @@
     </div>
   </div>
 
-  <!-- EDIT SESSION MODAL (WITH CONFIRMATION GUARD) -->
+  <!-- EDIT SESSION MODAL -->
   <div id="editModal" class="hidden fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-gray-800 border border-gray-700 rounded-xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
       <h3 class="text-xl font-bold text-gray-100">Edit Logged Session</h3>
@@ -386,7 +357,6 @@
       populateDropdowns();
       const fb = await waitForFirebase();
 
-      // Toggle Time Overrides
       document.getElementById('toggleStartOverride').addEventListener('change', (e) => {
         document.getElementById('startOverrideContainer').classList.toggle('hidden', !e.target.checked);
       });
@@ -590,7 +560,7 @@
           }
         });
         renderActiveSessionBar();
-        renderSessionsTable();
+        renderUnifiedActivityTable();
         calculateOverallStats();
       });
 
@@ -601,7 +571,7 @@
           const data = { id: docSnap.id, ...docSnap.data() };
           if (data.userId === currentUser.uid) bankrollTransactions.push(data);
         });
-        renderTransactionsTable();
+        renderUnifiedActivityTable();
         calculateOverallStats();
       });
     }
@@ -632,64 +602,74 @@
       timerInterval = setInterval(updateTimer, 1000);
     }
 
-    function renderSessionsTable() {
-      const tbody = document.getElementById('sessionsTableBody');
-      document.getElementById('sessionCount').textContent = `${loggedSessions.length} sessions`;
+    function renderUnifiedActivityTable() {
+      const tbody = document.getElementById('activityTableBody');
 
-      if (loggedSessions.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="10" class="py-8 text-center text-gray-500">No recorded poker sessions found.</td></tr>`;
+      // Combine sessions and transactions into a single unified array sorted by timestamp descending
+      const combined = [
+        ...loggedSessions.map(s => ({ ...s, entryType: 'session', sortTime: new Date(s.startTime).getTime() })),
+        ...bankrollTransactions.map(t => ({ ...t, entryType: 'transaction', sortTime: new Date(t.timestamp).getTime() }))
+      ].sort((a, b) => b.sortTime - a.sortTime);
+
+      document.getElementById('activityCount').textContent = `${combined.length} entries`;
+
+      if (combined.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="py-8 text-center text-gray-500">No recorded sessions or transactions found.</td></tr>`;
         return;
       }
 
-      tbody.innerHTML = loggedSessions.map(s => {
-        const start = new Date(s.startTime);
-        const end = new Date(s.endTime);
-        const durationHrs = Math.max(0.1, (end - start) / 3600000);
-        const totalHands = (s.endHand && s.startHand) ? (s.endHand - s.startHand) : 0;
-        const profit = s.netProfit || 0;
-        const hourly = profit / durationHrs;
+      tbody.innerHTML = combined.map(item => {
+        if (item.entryType === 'session') {
+          const start = new Date(item.startTime);
+          const end = new Date(item.endTime);
+          const durationHrs = Math.max(0.1, (end - start) / 3600000);
+          const totalHands = (item.endHand && item.startHand) ? (item.endHand - item.startHand) : 0;
+          const profit = item.netProfit || 0;
+          const hourly = profit / durationHrs;
 
-        return `
-          <tr class="hover:bg-gray-750 transition border-b border-gray-700/50">
-            <td class="py-3 px-4">${start.toLocaleDateString()}</td>
-            <td class="py-3 px-4 font-semibold text-gray-200">${s.gameType} <span class="text-xs text-gray-400">(${s.stakes})</span></td>
-            <td class="py-3 px-4">${durationHrs.toFixed(1)} hrs</td>
-            <td class="py-3 px-4">${totalHands > 0 ? totalHands.toLocaleString() : '--'}</td>
-            <td class="py-3 px-4">$${s.buyIn.toFixed(2)}</td>
-            <td class="py-3 px-4">$${(s.cashOut || 0).toFixed(2)}</td>
-            <td class="py-3 px-4 font-bold ${profit >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
-              ${profit >= 0 ? '+' : ''}$${profit.toFixed(2)}
-            </td>
-            <td class="py-3 px-4 ${hourly >= 0 ? 'text-emerald-400' : 'text-rose-400'}">$${hourly.toFixed(2)}/hr</td>
-            <td class="py-3 px-4 max-w-xs truncate text-xs text-gray-400" title="${s.notes || ''}">${s.notes || '--'}</td>
-            <td class="py-3 px-4 text-right space-x-2">
-              <button onclick="window.editSession('${s.id}')" class="text-indigo-400 hover:text-indigo-300 font-medium">Edit</button>
-              <button onclick="window.deleteSession('${s.id}')" class="text-rose-400 hover:text-rose-300 font-medium">Delete</button>
-            </td>
-          </tr>
-        `;
+          return `
+            <tr class="hover:bg-gray-750 transition border-b border-gray-700/50">
+              <td class="py-3 px-4">${start.toLocaleDateString()}</td>
+              <td class="py-3 px-4 font-semibold text-gray-200">
+                ♠️ ${item.gameType} <span class="text-xs text-gray-400">(${item.stakes})</span>
+              </td>
+              <td class="py-3 px-4">${durationHrs.toFixed(1)} hrs</td>
+              <td class="py-3 px-4">${totalHands > 0 ? totalHands.toLocaleString() : '--'}</td>
+              <td class="py-3 px-4 font-bold ${profit >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
+                ${profit >= 0 ? '+' : ''}$${profit.toFixed(2)}
+              </td>
+              <td class="py-3 px-4 ${hourly >= 0 ? 'text-emerald-400' : 'text-rose-400'}">$${hourly.toFixed(2)}/hr</td>
+              <td class="py-3 px-4 max-w-xs truncate text-xs text-gray-400" title="${item.notes || ''}">${item.notes || '--'}</td>
+              <td class="py-3 px-4 text-right space-x-2">
+                <button onclick="window.editSession('${item.id}')" class="text-indigo-400 hover:text-indigo-300 font-medium text-xs">Edit</button>
+                <button onclick="window.deleteSession('${item.id}')" class="text-rose-400 hover:text-rose-300 font-medium text-xs">Delete</button>
+              </td>
+            </tr>
+          `;
+        } else {
+          // Transaction entry
+          const tDate = new Date(item.timestamp);
+          const isDeposit = item.type === 'deposit';
+          return `
+            <tr class="hover:bg-gray-750 transition border-b border-gray-700/50 bg-gray-850/30">
+              <td class="py-3 px-4">${tDate.toLocaleDateString()}</td>
+              <td class="py-3 px-4 font-semibold capitalize ${isDeposit ? 'text-emerald-400' : 'text-amber-400'}">
+                💳 Bankroll ${item.type}
+              </td>
+              <td class="py-3 px-4 text-gray-500">--</td>
+              <td class="py-3 px-4 text-gray-500">--</td>
+              <td class="py-3 px-4 font-bold ${item.amount >= 0 ? 'text-emerald-400' : 'text-amber-400'}">
+                ${item.amount >= 0 ? '+' : ''}$${item.amount.toFixed(2)}
+              </td>
+              <td class="py-3 px-4 text-gray-500">--</td>
+              <td class="py-3 px-4 text-xs text-gray-300">${item.note || '--'}</td>
+              <td class="py-3 px-4 text-right">
+                <button onclick="window.deleteTransaction('${item.id}')" class="text-rose-400 hover:text-rose-300 text-xs font-medium">Delete</button>
+              </td>
+            </tr>
+          `;
+        }
       }).join('');
-    }
-
-    function renderTransactionsTable() {
-      const tbody = document.getElementById('transactionsTableBody');
-      if (bankrollTransactions.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-gray-500">No bankroll deposits or withdrawals logged.</td></tr>`;
-        return;
-      }
-      tbody.innerHTML = bankrollTransactions.map(t => `
-        <tr class="hover:bg-gray-750 transition border-b border-gray-700/50">
-          <td class="py-3 px-4 text-xs text-gray-400">${new Date(t.timestamp).toLocaleString()}</td>
-          <td class="py-3 px-4 capitalize font-semibold ${t.type === 'deposit' ? 'text-emerald-400' : 'text-amber-400'}">${t.type}</td>
-          <td class="py-3 px-4 font-bold ${t.amount >= 0 ? 'text-emerald-400' : 'text-amber-400'}">
-            ${t.amount >= 0 ? '+' : ''}$${t.amount.toFixed(2)}
-          </td>
-          <td class="py-3 px-4 text-xs text-gray-300">${t.note || '--'}</td>
-          <td class="py-3 px-4 text-right">
-            <button onclick="window.deleteTransaction('${t.id}')" class="text-rose-400 hover:text-rose-300 text-xs">Delete</button>
-          </td>
-        </tr>
-      `).join('');
     }
 
     function calculateOverallStats() {
@@ -751,14 +731,14 @@
         alert("No session data available to export.");
         return;
       }
-      let csv = "Date,Game,Stakes,Start Time,End Time,Hours,Start Hand,End Hand,Total Hands,Starting Wallet,Ending Wallet,Net Profit,Notes\n";
+      let csv = "Date,Game,Stakes,Start Time,End Time,Hours,Start Hand,End Hand,Total Hands,Net Profit,Notes\n";
       loggedSessions.forEach(s => {
         const start = new Date(s.startTime);
         const end = new Date(s.endTime);
         const hrs = ((end - start) / 3600000).toFixed(2);
         const hands = (s.endHand && s.startHand) ? (s.endHand - s.startHand) : 0;
         const cleanNotes = (s.notes || "").replace(/"/g, '""');
-        csv += `"${start.toLocaleDateString()}","${s.gameType}","${s.stakes}","${start.toLocaleTimeString()}","${end.toLocaleTimeString()}",${hrs},${s.startHand},${s.endHand || ''},${hands},${s.buyIn},${s.cashOut || 0},${s.netProfit || 0},"${cleanNotes}"\n`;
+        csv += `"${start.toLocaleDateString()}","${s.gameType}","${s.stakes}","${start.toLocaleTimeString()}","${end.toLocaleTimeString()}",${hrs},${s.startHand},${s.endHand || ''},${hands},${s.netProfit || 0},"${cleanNotes}"\n`;
       });
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
