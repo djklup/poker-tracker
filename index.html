@@ -264,4 +264,581 @@
             <span>Override Date/Time (Backdate)</span>
           </label>
           <div id="txOverrideContainer" class="hidden mt-2">
-            <input type="datetime-local" id="txTimeOverride" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 text-sm focus:outline-none focus:border-indigo-50
+            <input type="datetime-local" id="txTimeOverride" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 text-sm focus:outline-none focus:border-indigo-500">
+          </div>
+        </div>
+
+        <div class="flex justify-end space-x-3 pt-2">
+          <button type="button" id="closeTxModal" class="bg-gray-700 hover:bg-gray-600 text-gray-300 px-4 py-2 rounded-lg text-sm">Cancel</button>
+          <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-lg font-semibold text-sm">Save Transaction</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- EDIT TRANSACTION MODAL -->
+  <div id="editTxModal" class="hidden fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-gray-800 border border-gray-700 rounded-xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+      <h3 class="text-xl font-bold text-gray-100">Edit Transaction</h3>
+      <form id="editTxForm" class="space-y-4">
+        <input type="hidden" id="editTxId">
+        <div>
+          <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Transaction Type</label>
+          <select id="editTxType" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500">
+            <option value="deposit">Deposit (+ Addition)</option>
+            <option value="withdrawal">Withdrawal (- Cash Out)</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Amount ($)</label>
+          <input type="number" step="0.01" id="editTxAmount" required class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Date & Time</label>
+          <input type="datetime-local" id="editTxTimestamp" required class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 text-sm focus:outline-none focus:border-indigo-500">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Note / Description</label>
+          <input type="text" id="editTxNote" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500">
+        </div>
+        <div class="flex justify-end space-x-3 pt-2">
+          <button type="button" id="closeEditTxModal" class="bg-gray-700 hover:bg-gray-600 text-gray-300 px-4 py-2 rounded-lg text-sm">Cancel</button>
+          <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-lg font-semibold text-sm">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- EDIT SESSION MODAL -->
+  <div id="editModal" class="hidden fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-gray-800 border border-gray-700 rounded-xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
+      <h3 class="text-xl font-bold text-gray-100">Edit Logged Session</h3>
+      <form id="editSessionForm" class="space-y-4">
+        <input type="hidden" id="editSessionId">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Game Type</label>
+            <select id="editGameType" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500"></select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Stakes</label>
+            <select id="editStakes" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500"></select>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Start Time</label>
+            <input type="datetime-local" id="editStartTime" required class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">End Time</label>
+            <input type="datetime-local" id="editEndTime" required class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Starting Wallet ($)</label>
+            <input type="number" step="0.01" id="editBuyIn" required class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Ending Wallet ($)</label>
+            <input type="number" step="0.01" id="editCashOut" required class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Start Hand #</label>
+            <input type="number" id="editStartHand" required class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">End Hand #</label>
+            <input type="number" id="editEndHand" required class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Notes</label>
+          <textarea id="editNotes" rows="2" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500"></textarea>
+        </div>
+        <div class="flex justify-end space-x-3 pt-2">
+          <button type="button" id="closeEditModal" class="bg-gray-700 hover:bg-gray-600 text-gray-300 px-4 py-2 rounded-lg text-sm">Cancel</button>
+          <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-lg font-semibold text-sm">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- APPLICATION LOGIC -->
+  <script type="module">
+    let currentUser = null;
+    let activeSession = null;
+    let loggedSessions = [];
+    let bankrollTransactions = [];
+    let timerInterval = null;
+
+    function waitForFirebase() {
+      return new Promise((resolve) => {
+        const check = () => {
+          if (window.FirebaseServices) resolve(window.FirebaseServices);
+          else setTimeout(check, 50);
+        };
+        check();
+      });
+    }
+
+    function populateDropdowns() {
+      const config = window.POKER_CONFIG || { stakes: [], gameTypes: [] };
+      const fillSelect = (elemId, items) => {
+        const select = document.getElementById(elemId);
+        if (!select) return;
+        select.innerHTML = items.map(i => `<option value="${i.value}">${i.label}</option>`).join('');
+      };
+      fillSelect('startGameType', config.gameTypes);
+      fillSelect('editGameType', config.gameTypes);
+      fillSelect('startStakes', config.stakes);
+      fillSelect('editStakes', config.stakes);
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      populateDropdowns();
+      const fb = await waitForFirebase();
+
+      document.getElementById('toggleStartOverride').addEventListener('change', (e) => {
+        document.getElementById('startOverrideContainer').classList.toggle('hidden', !e.target.checked);
+      });
+      document.getElementById('toggleEndOverride').addEventListener('change', (e) => {
+        document.getElementById('endOverrideContainer').classList.toggle('hidden', !e.target.checked);
+      });
+      document.getElementById('toggleTxOverride').addEventListener('change', (e) => {
+        document.getElementById('txOverrideContainer').classList.toggle('hidden', !e.target.checked);
+      });
+
+      fb.onAuthStateChanged(fb.auth, (user) => {
+        currentUser = user;
+        if (user) {
+          document.getElementById('loggedOutNotice').classList.add('hidden');
+          document.getElementById('dashboard').classList.remove('hidden');
+          document.getElementById('userInfo').classList.remove('hidden');
+          document.getElementById('loginBtn').classList.add('hidden');
+          document.getElementById('userName').textContent = user.displayName || user.email;
+          attachFirestoreListeners(fb);
+        } else {
+          document.getElementById('loggedOutNotice').classList.remove('hidden');
+          document.getElementById('dashboard').classList.add('hidden');
+          document.getElementById('userInfo').classList.add('hidden');
+          document.getElementById('loginBtn').classList.remove('hidden');
+          currentUser = null;
+          loggedSessions = [];
+          bankrollTransactions = [];
+        }
+      });
+
+      document.getElementById('loginBtn').addEventListener('click', () => {
+        fb.signInWithPopup(fb.auth, fb.googleProvider).catch(err => alert("Login Error: " + err.message));
+      });
+
+      document.getElementById('logoutBtn').addEventListener('click', () => {
+        fb.signOut(fb.auth);
+      });
+
+      document.getElementById('startSessionBtn').addEventListener('click', () => {
+        if (activeSession) {
+          alert("You already have an active session in progress!");
+          return;
+        }
+        document.getElementById('toggleStartOverride').checked = false;
+        document.getElementById('startOverrideContainer').classList.add('hidden');
+        document.getElementById('startTimeOverride').value = '';
+
+        const lastSession = loggedSessions[0];
+        const warningElem = document.getElementById('handWarningText');
+        if (lastSession && lastSession.endHand) {
+          warningElem.textContent = `Tip: Previous session ended at hand #${lastSession.endHand.toLocaleString()}`;
+          warningElem.classList.remove('hidden');
+        } else {
+          warningElem.classList.add('hidden');
+        }
+        document.getElementById('startModal').classList.remove('hidden');
+      });
+
+      document.getElementById('closeStartModal').addEventListener('click', () => {
+        document.getElementById('startModal').classList.add('hidden');
+      });
+
+      document.getElementById('depositWithdrawBtn').addEventListener('click', () => {
+        document.getElementById('toggleTxOverride').checked = false;
+        document.getElementById('txOverrideContainer').classList.add('hidden');
+        document.getElementById('txTimeOverride').value = '';
+        document.getElementById('txModal').classList.remove('hidden');
+      });
+
+      document.getElementById('closeTxModal').addEventListener('click', () => {
+        document.getElementById('txModal').classList.add('hidden');
+      });
+
+      document.getElementById('startSessionForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const startHand = parseInt(document.getElementById('startHandNum').value, 10);
+        const lastSession = loggedSessions[0];
+
+        if (lastSession && lastSession.endHand && startHand < lastSession.endHand) {
+          const confirmHand = confirm(`Warning: Starting hand #${startHand.toLocaleString()} is LESS than your previous session's ending hand #${lastSession.endHand.toLocaleString()}.\n\nAre you sure you want to save this starting hand count?`);
+          if (!confirmHand) return;
+        }
+
+        const isOverride = document.getElementById('toggleStartOverride').checked;
+        const overrideTime = document.getElementById('startTimeOverride').value;
+        const startTimeISO = (isOverride && overrideTime) ? new Date(overrideTime).toISOString() : new Date().toISOString();
+
+        const sessionData = {
+          userId: currentUser.uid,
+          gameType: document.getElementById('startGameType').value,
+          stakes: document.getElementById('startStakes').value,
+          buyIn: parseFloat(document.getElementById('startBuyIn').value),
+          startHand: startHand,
+          startTime: startTimeISO,
+          status: 'active',
+          createdAt: fb.serverTimestamp()
+        };
+
+        await fb.addDoc(fb.collection(fb.db, 'sessions'), sessionData);
+        document.getElementById('startModal').classList.add('hidden');
+        document.getElementById('startSessionForm').reset();
+      });
+
+      document.getElementById('endSessionBtn').addEventListener('click', () => {
+        document.getElementById('toggleEndOverride').checked = false;
+        document.getElementById('endOverrideContainer').classList.add('hidden');
+        document.getElementById('endTimeOverride').value = '';
+        document.getElementById('endModal').classList.remove('hidden');
+      });
+
+      document.getElementById('closeEndModal').addEventListener('click', () => {
+        document.getElementById('endModal').classList.add('hidden');
+      });
+
+      document.getElementById('endSessionForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!activeSession) return;
+
+        const endHand = parseInt(document.getElementById('endHandNum').value, 10);
+        if (endHand < activeSession.startHand) {
+          const confirmHand = confirm("Ending hand number is lower than your starting hand number. Proceed anyway?");
+          if (!confirmHand) return;
+        }
+
+        const isOverride = document.getElementById('toggleEndOverride').checked;
+        const overrideTime = document.getElementById('endTimeOverride').value;
+        const endTimeISO = (isOverride && overrideTime) ? new Date(overrideTime).toISOString() : new Date().toISOString();
+        
+        const cashOut = parseFloat(document.getElementById('endCashOut').value);
+        const netProfit = cashOut - activeSession.buyIn;
+
+        const sessionRef = fb.doc(fb.db, 'sessions', activeSession.id);
+        await fb.updateDoc(sessionRef, {
+          status: 'completed',
+          cashOut: cashOut,
+          netProfit: netProfit,
+          endHand: endHand,
+          endTime: endTimeISO,
+          notes: document.getElementById('endNotes').value || ""
+        });
+
+        document.getElementById('endModal').classList.add('hidden');
+        document.getElementById('endSessionForm').reset();
+      });
+
+      document.getElementById('txForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const txType = document.getElementById('txType').value;
+        const amount = parseFloat(document.getElementById('txAmount').value);
+        const isOverride = document.getElementById('toggleTxOverride').checked;
+        const overrideTime = document.getElementById('txTimeOverride').value;
+        const timestampISO = (isOverride && overrideTime) ? new Date(overrideTime).toISOString() : new Date().toISOString();
+
+        await fb.addDoc(fb.collection(fb.db, 'transactions'), {
+          userId: currentUser.uid,
+          type: txType,
+          amount: txType === 'deposit' ? amount : -amount,
+          note: document.getElementById('txNote').value || "",
+          timestamp: timestampISO,
+          createdAt: fb.serverTimestamp()
+        });
+
+        document.getElementById('txModal').classList.add('hidden');
+        document.getElementById('txForm').reset();
+      });
+
+      document.getElementById('editSessionForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const confirmEdit = confirm("Are you sure you want to save these edits? This will recalculate the session's net profit and duration.");
+        if (!confirmEdit) return;
+
+        const sessionId = document.getElementById('editSessionId').value;
+        const buyIn = parseFloat(document.getElementById('editBuyIn').value);
+        const cashOut = parseFloat(document.getElementById('editCashOut').value);
+
+        const sessionRef = fb.doc(fb.db, 'sessions', sessionId);
+        await fb.updateDoc(sessionRef, {
+          gameType: document.getElementById('editGameType').value,
+          stakes: document.getElementById('editStakes').value,
+          startTime: new Date(document.getElementById('editStartTime').value).toISOString(),
+          endTime: new Date(document.getElementById('editEndTime').value).toISOString(),
+          buyIn: buyIn,
+          cashOut: cashOut,
+          netProfit: cashOut - buyIn,
+          startHand: parseInt(document.getElementById('editStartHand').value, 10),
+          endHand: parseInt(document.getElementById('editEndHand').value, 10),
+          notes: document.getElementById('editNotes').value
+        });
+
+        document.getElementById('editModal').classList.add('hidden');
+      });
+
+      document.getElementById('closeEditModal').addEventListener('click', () => {
+        document.getElementById('editModal').classList.add('hidden');
+      });
+
+      document.getElementById('editTxForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const txId = document.getElementById('editTxId').value;
+        const txType = document.getElementById('editTxType').value;
+        const amount = parseFloat(document.getElementById('editTxAmount').value);
+
+        const txRef = fb.doc(fb.db, 'transactions', txId);
+        await fb.updateDoc(txRef, {
+          type: txType,
+          amount: txType === 'deposit' ? amount : -amount,
+          timestamp: new Date(document.getElementById('editTxTimestamp').value).toISOString(),
+          note: document.getElementById('editTxNote').value || ""
+        });
+
+        document.getElementById('editTxModal').classList.add('hidden');
+      });
+
+      document.getElementById('closeEditTxModal').addEventListener('click', () => {
+        document.getElementById('editTxModal').classList.add('hidden');
+      });
+
+      document.getElementById('exportCsvBtn').addEventListener('click', () => exportToCSV());
+    });
+
+    function attachFirestoreListeners(fb) {
+      const qSessions = fb.query(fb.collection(fb.db, 'sessions'), fb.orderBy('startTime', 'desc'));
+      fb.onSnapshot(qSessions, (snapshot) => {
+        loggedSessions = [];
+        activeSession = null;
+        snapshot.docs.forEach(docSnap => {
+          const data = { id: docSnap.id, ...docSnap.data() };
+          if (data.userId === currentUser.uid) {
+            if (data.status === 'active') activeSession = data;
+            else loggedSessions.push(data);
+          }
+        });
+        renderActiveSessionBar();
+        renderUnifiedActivityTable();
+        calculateOverallStats();
+      });
+
+      const qTx = fb.query(fb.collection(fb.db, 'transactions'), fb.orderBy('timestamp', 'desc'));
+      fb.onSnapshot(qTx, (snapshot) => {
+        bankrollTransactions = [];
+        snapshot.docs.forEach(docSnap => {
+          const data = { id: docSnap.id, ...docSnap.data() };
+          if (data.userId === currentUser.uid) bankrollTransactions.push(data);
+        });
+        renderUnifiedActivityTable();
+        calculateOverallStats();
+      });
+    }
+
+    function renderActiveSessionBar() {
+      const bar = document.getElementById('activeSessionBar');
+      if (!activeSession) {
+        bar.classList.add('hidden');
+        if (timerInterval) clearInterval(timerInterval);
+        return;
+      }
+      bar.classList.remove('hidden');
+      document.getElementById('activeGameDetails').textContent = `${activeSession.gameType} (${activeSession.stakes})`;
+      document.getElementById('activeBuyIn').textContent = `$${activeSession.buyIn.toFixed(2)}`;
+      document.getElementById('activeStartTime').textContent = new Date(activeSession.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      document.getElementById('activeStartHand').textContent = activeSession.startHand.toLocaleString();
+
+      if (timerInterval) clearInterval(timerInterval);
+      const updateTimer = () => {
+        const diffMs = new Date() - new Date(activeSession.startTime);
+        const hrs = Math.floor(diffMs / 3600000);
+        const mins = Math.floor((diffMs % 3600000) / 60000);
+        const secs = Math.floor((diffMs % 60000) / 1000);
+        document.getElementById('activeTimer').textContent = 
+          `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+      };
+      updateTimer();
+      timerInterval = setInterval(updateTimer, 1000);
+    }
+
+    function renderUnifiedActivityTable() {
+      const tbody = document.getElementById('activityTableBody');
+
+      const combined = [
+        ...loggedSessions.map(s => ({ ...s, entryType: 'session', sortTime: new Date(s.startTime).getTime() })),
+        ...bankrollTransactions.map(t => ({ ...t, entryType: 'transaction', sortTime: new Date(t.timestamp).getTime() }))
+      ].sort((a, b) => b.sortTime - a.sortTime);
+
+      document.getElementById('activityCount').textContent = `${combined.length} entries`;
+
+      if (combined.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" class="py-8 text-center text-gray-500">No recorded sessions or transactions found.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = combined.map(item => {
+        if (item.entryType === 'session') {
+          const start = new Date(item.startTime);
+          const end = new Date(item.endTime);
+          const durationHrs = Math.max(0.1, (end - start) / 3600000);
+          const totalHands = (item.endHand && item.startHand) ? (item.endHand - item.startHand) : 0;
+          const profit = item.netProfit || 0;
+          const hourly = profit / durationHrs;
+          const per100 = totalHands > 0 ? (profit / totalHands) * 100 : 0;
+
+          return `
+            <tr class="hover:bg-gray-750 transition border-b border-gray-700/50">
+              <td class="py-3 px-4">${start.toLocaleDateString()}</td>
+              <td class="py-3 px-4 font-semibold text-gray-200">
+                ♠️ ${item.gameType} <span class="text-xs text-gray-400">(${item.stakes})</span>
+              </td>
+              <td class="py-3 px-4">${durationHrs.toFixed(1)} hrs</td>
+              <td class="py-3 px-4">${totalHands > 0 ? totalHands.toLocaleString() : '--'}</td>
+              <td class="py-3 px-4 font-bold ${profit >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
+                ${profit >= 0 ? '+' : ''}$${profit.toFixed(2)}
+              </td>
+              <td class="py-3 px-4 ${hourly >= 0 ? 'text-emerald-400' : 'text-rose-400'}">$${hourly.toFixed(2)}/hr</td>
+              <td class="py-3 px-4 ${per100 >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${totalHands > 0 ? (per100 >= 0 ? '+' : '') + '$' + per100.toFixed(2) : '--'}</td>
+              <td class="py-3 px-4 max-w-xs truncate text-xs text-gray-400" title="${item.notes || ''}">${item.notes || '--'}</td>
+              <td class="py-3 px-4 text-right space-x-2">
+                <button onclick="window.editSession('${item.id}')" class="text-indigo-400 hover:text-indigo-300 font-medium text-xs">Edit</button>
+                <button onclick="window.deleteSession('${item.id}')" class="text-rose-400 hover:text-rose-300 font-medium text-xs">Delete</button>
+              </td>
+            </tr>
+          `;
+        } else {
+          const tDate = new Date(item.timestamp);
+          const isDeposit = item.type === 'deposit';
+          return `
+            <tr class="hover:bg-gray-750 transition border-b border-gray-700/50 bg-gray-850/30">
+              <td class="py-3 px-4">${tDate.toLocaleDateString()}</td>
+              <td class="py-3 px-4 font-semibold capitalize ${isDeposit ? 'text-emerald-400' : 'text-amber-400'}">
+                💳 Bankroll ${item.type}
+              </td>
+              <td class="py-3 px-4 text-gray-500">--</td>
+              <td class="py-3 px-4 text-gray-500">--</td>
+              <td class="py-3 px-4 font-bold ${item.amount >= 0 ? 'text-emerald-400' : 'text-amber-400'}">
+                ${item.amount >= 0 ? '+' : ''}$${item.amount.toFixed(2)}
+              </td>
+              <td class="py-3 px-4 text-gray-500">--</td>
+              <td class="py-3 px-4 text-gray-500">--</td>
+              <td class="py-3 px-4 text-xs text-gray-300">${item.note || '--'}</td>
+              <td class="py-3 px-4 text-right space-x-2">
+                <button onclick="window.editTransaction('${item.id}')" class="text-indigo-400 hover:text-indigo-300 font-medium text-xs">Edit</button>
+                <button onclick="window.deleteTransaction('${item.id}')" class="text-rose-400 hover:text-rose-300 text-xs font-medium">Delete</button>
+              </td>
+            </tr>
+          `;
+        }
+      }).join('');
+    }
+
+    function calculateOverallStats() {
+      let totalSessionProfit = 0;
+      let totalHours = 0;
+
+      loggedSessions.forEach(s => {
+        totalSessionProfit += (s.netProfit || 0);
+        const start = new Date(s.startTime);
+        const end = new Date(s.endTime);
+        totalHours += Math.max(0, (end - start) / 3600000);
+      });
+
+      let totalTxAdjustments = bankrollTransactions.reduce((acc, t) => acc + (t.amount || 0), 0);
+      let grandTotalBankroll = totalSessionProfit + totalTxAdjustments;
+
+      document.getElementById('statBankroll').textContent = `$${grandTotalBankroll.toFixed(2)}`;
+      document.getElementById('statNetProfit').textContent = `${totalSessionProfit >= 0 ? '+' : ''}$${totalSessionProfit.toFixed(2)}`;
+      document.getElementById('statNetProfit').className = `text-2xl font-bold ${totalSessionProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+      document.getElementById('statHours').textContent = `${totalHours.toFixed(1)} hrs`;
+
+      const overallHourly = totalHours > 0 ? (totalSessionProfit / totalHours) : 0;
+      document.getElementById('statHourly').textContent = `$${overallHourly.toFixed(2)}/hr`;
+      document.getElementById('statHourly').className = `text-2xl font-bold ${overallHourly >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+    }
+
+    window.editSession = (id) => {
+      const s = loggedSessions.find(item => item.id === id);
+      if (!s) return;
+      document.getElementById('editSessionId').value = s.id;
+      document.getElementById('editGameType').value = s.gameType;
+      document.getElementById('editStakes').value = s.stakes;
+      document.getElementById('editBuyIn').value = s.buyIn;
+      document.getElementById('editCashOut').value = s.cashOut || 0;
+      document.getElementById('editStartHand').value = s.startHand;
+      document.getElementById('editEndHand').value = s.endHand || s.startHand;
+      document.getElementById('editStartTime').value = new Date(s.startTime).toISOString().slice(0, 16);
+      document.getElementById('editEndTime').value = new Date(s.endTime).toISOString().slice(0, 16);
+      document.getElementById('editNotes').value = s.notes || "";
+      document.getElementById('editModal').classList.remove('hidden');
+    };
+
+    window.editTransaction = (id) => {
+      const t = bankrollTransactions.find(item => item.id === id);
+      if (!t) return;
+      document.getElementById('editTxId').value = t.id;
+      document.getElementById('editTxType').value = t.type;
+      document.getElementById('editTxAmount').value = Math.abs(t.amount);
+      document.getElementById('editTxTimestamp').value = new Date(t.timestamp).toISOString().slice(0, 16);
+      document.getElementById('editTxNote').value = t.note || "";
+      document.getElementById('editTxModal').classList.remove('hidden');
+    };
+
+    window.deleteSession = async (id) => {
+      if (confirm("Are you sure you want to delete this session entry permanently?")) {
+        const fb = window.FirebaseServices;
+        await fb.deleteDoc(fb.doc(fb.db, 'sessions', id));
+      }
+    };
+
+    window.deleteTransaction = async (id) => {
+      if (confirm("Are you sure you want to delete this bankroll deposit/withdrawal record?")) {
+        const fb = window.FirebaseServices;
+        await fb.deleteDoc(fb.doc(fb.db, 'transactions', id));
+      }
+    };
+
+    function exportToCSV() {
+      if (loggedSessions.length === 0) {
+        alert("No session data available to export.");
+        return;
+      }
+      let csv = "Date,Game,Stakes,Start Time,End Time,Hours,Start Hand,End Hand,Total Hands,Net Profit,$/100 Hands,Notes\n";
+      loggedSessions.forEach(s => {
+        const start = new Date(s.startTime);
+        const end = new Date(s.endTime);
+        const hrs = ((end - start) / 3600000).toFixed(2);
+        const hands = (s.endHand && s.startHand) ? (s.endHand - s.startHand) : 0;
+        const profit = s.netProfit || 0;
+        const per100 = hands > 0 ? (profit / hands) * 100 : 0;
+        const cleanNotes = (s.notes || "").replace(/"/g, '""');
+        csv += `"${start.toLocaleDateString()}","${s.gameType}","${s.stakes}","${start.toLocaleTimeString()}","${end.toLocaleTimeString()}",${hrs},${s.startHand},${s.endHand || ''},${hands},${profit},${per100.toFixed(2)},"${cleanNotes}"\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `poker_bankroll_export_${new Date().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  </script>
+</body>
+</html>
