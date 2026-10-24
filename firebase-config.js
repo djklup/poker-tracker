@@ -1,9 +1,7 @@
 /**
- * Poker Tracker - Firebase Configuration
- * Keep your Firebase credentials isolated in this file.
+ * Poker Tracker - Firebase Configuration Module
  */
 
-// Import Firebase SDK modules via CDN ESM
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { 
   getAuth, 
@@ -25,7 +23,7 @@ import {
   serverTimestamp 
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// TODO: Ensure your actual Firebase config values are pasted below
+// Your actual Firebase config credentials
 const firebaseConfig = {
   apiKey: "AIzaSyDlPrrQt1qJh8hefVhdQaVyYPR6t9LS8wI",
   authDomain: "poker-tracker-29f10.firebaseapp.com",
@@ -35,13 +33,13 @@ const firebaseConfig = {
   appId: "1:540593278406:web:789457710ddb9f4b0736c7"
 };
 
-// Initialize Firebase App
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const googleProvider = new GoogleAuthProvider();
 
-// Export Firebase services and functions for use in main index.html script
+// Assign to window
 window.FirebaseServices = {
   auth,
   db,
@@ -59,3 +57,6 @@ window.FirebaseServices = {
   orderBy,
   serverTimestamp
 };
+
+// Dispatch event notifying index.html that Firebase is 100% ready
+window.dispatchEvent(new Event('firebase-ready'));
