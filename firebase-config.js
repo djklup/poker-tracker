@@ -39,7 +39,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const googleProvider = new GoogleAuthProvider();
 
-// Assign to window
+// Assign to window immediately so it is available globally
 window.FirebaseServices = {
   auth,
   db,
@@ -58,5 +58,5 @@ window.FirebaseServices = {
   serverTimestamp
 };
 
-// Dispatch event notifying index.html that Firebase is 100% ready
-window.dispatchEvent(new Event('firebase-ready'));
+// Flag that it's loaded
+window.isFirebaseLoaded = true;
