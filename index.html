@@ -3,6 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Poker Tracker">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="manifest" href="manifest.json">
   <title>Poker Bankroll Tracker</title>
 
   <!-- Tailwind CSS CDN -->
@@ -10,17 +16,6 @@
 
   <!-- External App Configuration File -->
   <script src="options.js"></script>
-
-  <!-- External Firebase Setup Module -->
-  <script type="module" src="firebase-config.js"></script>
-
-  <!-- iOS Home Screen App Icon & Native App Settings -->
-  <link rel="apple-touch-icon" href="apple-touch-icon.png">
-  <link rel="manifest" href="manifest.json">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Poker Tracker">
-  
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen">
 
@@ -409,8 +404,10 @@
     </div>
   </div>
 
-  <!-- APPLICATION LOGIC -->
-  <script>
+  <!-- APPLICATION LOGIC (Loaded as a module so it runs directly after Firebase configuration) -->
+  <script type="module">
+    import "./firebase-config.js";
+
     let currentUser = null;
     let activeSession = null;
     let loggedSessions = [];
@@ -456,7 +453,7 @@
       }
     }
 
-    function initializeAppLogic() {
+    document.addEventListener('DOMContentLoaded', () => {
       const fb = window.FirebaseServices;
       if (!fb) return;
 
@@ -729,13 +726,7 @@
       });
 
       document.getElementById('exportCsvBtn').addEventListener('click', () => exportToCSV());
-    }
-
-    if (window.FirebaseServices) {
-      initializeAppLogic();
-    } else {
-      window.addEventListener('firebase-ready', initializeAppLogic);
-    }
+    });
 
     function attachFirestoreListeners(fb) {
       const qSessions = fb.query(fb.collection(fb.db, 'sessions'), fb.orderBy('startTime', 'desc'));
@@ -744,4 +735,215 @@
         activeSession = null;
         snapshot.docs.forEach(docSnap => {
           const data = { id: docSnap.id, ...docSnap.data() };
-          if
+          if (data.userId === currentUser.uid) {
+            if (data.status === 'active') activeSession = data;
+            else loggedSessions.push(data);
+          }
+        });
+        renderActiveSessionBar();
+        renderUnifiedActivityTable();
+        calculateOverallStats();
+      });
+
+      const qTx = fb.query(fb.collection(fb.db, 'transactions'), fb.orderBy('timestamp', 'desc'));
+      fb.onSnapshot(qTx, (snapshot) => {
+        bankrollTransactions = [];
+        snapshot.docs.forEach(docSnap => {
+          const data = { id: docSnap.id, ...docSnap.data() };
+          if (data.userId === currentUser.uid) bankrollTransactions.push(data);
+        });
+        renderUnifiedActivityTable();
+        calculateOverallStats();
+      });
+    }
+
+    function renderActiveSessionBar() {
+      const bar = document.getElementById('activeSessionBar');
+      if (!activeSession) {
+        bar.classList.add('hidden');
+        if (timerInterval) clearInterval(timerInterval);
+        return;
+      }
+      bar.classList.remove('hidden');
+      document.getElementById('activeGameDetails').textContent = `${activeSession.gameType} (${activeSession.stakes})`;
+      document.getElementById('activeBuyIn').textContent = `$${activeSession.buyIn.toFixed(2)}`;
+      document.getElementById('activeStartTime').textContent = formatPacificTime(activeSession.startTime);
+      document.getElementById('activeStartHand').textContent = activeSession.startHand.toLocaleString();
+
+      if (timerInterval) clearInterval(timerInterval);
+      const updateTimer = () => {
+        const diffMs = new Date() - new Date(activeSession.startTime);
+        const hrs = Math.floor(diffMs / 3600000);
+        const mins = Math.floor((diffMs % 3600000) / 60000);
+        const secs = Math.floor((diffMs % 60000) / 1000);
+        document.getElementById('activeTimer').textContent = 
+          `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+      };
+      updateTimer();
+      timerInterval = setInterval(updateTimer, 1000);
+    }
+
+    function renderUnifiedActivityTable() {
+      const tbody = document.getElementById('activityTableBody');
+
+      const combined = [
+        ...loggedSessions.map(s => ({ ...s, entryType: 'session', sortTime: new Date(s.startTime).getTime() })),
+        ...bankrollTransactions.map(t => ({ ...t, entryType: 'transaction', sortTime: new Date(t.timestamp).getTime() }))
+      ].sort((a, b) => b.sortTime - a.sortTime);
+
+      document.getElementById('activityCount').textContent = `${combined.length} entries`;
+
+      if (combined.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" class="py-8 text-center text-gray-500">No recorded sessions or transactions found.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = combined.map(item => {
+        if (item.entryType === 'session') {
+          const start = new Date(item.startTime);
+          const end = new Date(item.endTime);
+          const durationHrs = Math.max(0.1, (end - start) / 3600000);
+          const totalHands = (item.endHand && item.startHand) ? (item.endHand - item.startHand) : 0;
+          const profit = item.netProfit || 0;
+          const hourly = profit / durationHrs;
+          const per100 = totalHands > 0 ? (profit / totalHands) * 100 : 0;
+
+          return `
+            <tr class="hover:bg-gray-750 transition border-b border-gray-700/50">
+              <td class="py-3 px-4">${formatPacificDate(item.startTime)}</td>
+              <td class="py-3 px-4 font-semibold text-gray-200">
+                ♠️ ${item.gameType} <span class="text-xs text-gray-400">(${item.stakes})</span>
+              </td>
+              <td class="py-3 px-4">${durationHrs.toFixed(1)} hrs</td>
+              <td class="py-3 px-4">${totalHands > 0 ? totalHands.toLocaleString() : '--'}</td>
+              <td class="py-3 px-4 font-bold ${profit >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
+                ${profit >= 0 ? '+' : ''}$${profit.toFixed(2)}
+              </td>
+              <td class="py-3 px-4 ${hourly >= 0 ? 'text-emerald-400' : 'text-rose-400'}">$${hourly.toFixed(2)}/hr</td>
+              <td class="py-3 px-4 ${per100 >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${totalHands > 0 ? (per100 >= 0 ? '+' : '') + '$' + per100.toFixed(2) : '--'}</td>
+              <td class="py-3 px-4 max-w-xs truncate text-xs text-gray-400" title="${item.notes || ''}">${item.notes || '--'}</td>
+              <td class="py-3 px-4 text-right space-x-2">
+                <button onclick="window.editSession('${item.id}')" class="text-indigo-400 hover:text-indigo-300 font-medium text-xs">Edit</button>
+                <button onclick="window.deleteSession('${item.id}')" class="text-rose-400 hover:text-rose-300 font-medium text-xs">Delete</button>
+              </td>
+            </tr>
+          `;
+        } else {
+          const isDeposit = item.type === 'deposit';
+          return `
+            <tr class="hover:bg-gray-750 transition border-b border-gray-700/50 bg-gray-850/30">
+              <td class="py-3 px-4">${formatPacificDate(item.timestamp)}</td>
+              <td class="py-3 px-4 font-semibold capitalize ${isDeposit ? 'text-emerald-400' : 'text-amber-400'}">
+                💳 Bankroll ${item.type}
+              </td>
+              <td class="py-3 px-4 text-gray-500">--</td>
+              <td class="py-3 px-4 text-gray-500">--</td>
+              <td class="py-3 px-4 font-bold ${item.amount >= 0 ? 'text-emerald-400' : 'text-amber-400'}">
+                ${item.amount >= 0 ? '+' : ''}$${item.amount.toFixed(2)}
+              </td>
+              <td class="py-3 px-4 text-gray-500">--</td>
+              <td class="py-3 px-4 text-gray-500">--</td>
+              <td class="py-3 px-4 text-xs text-gray-300">${item.note || '--'}</td>
+              <td class="py-3 px-4 text-right space-x-2">
+                <button onclick="window.editTransaction('${item.id}')" class="text-indigo-400 hover:text-indigo-300 font-medium text-xs">Edit</button>
+                <button onclick="window.deleteTransaction('${item.id}')" class="text-rose-400 hover:text-rose-300 text-xs font-medium">Delete</button>
+              </td>
+            </tr>
+          `;
+        }
+      }).join('');
+    }
+
+    function calculateOverallStats() {
+      let totalSessionProfit = 0;
+      let totalHours = 0;
+
+      loggedSessions.forEach(s => {
+        totalSessionProfit += (s.netProfit || 0);
+        const start = new Date(s.startTime);
+        const end = new Date(s.endTime);
+        totalHours += Math.max(0, (end - start) / 3600000);
+      });
+
+      let totalTxAdjustments = bankrollTransactions.reduce((acc, t) => acc + (t.amount || 0), 0);
+      let grandTotalBankroll = totalSessionProfit + totalTxAdjustments;
+
+      document.getElementById('statBankroll').textContent = `$${grandTotalBankroll.toFixed(2)}`;
+      document.getElementById('statNetProfit').textContent = `${totalSessionProfit >= 0 ? '+' : ''}$${totalSessionProfit.toFixed(2)}`;
+      document.getElementById('statNetProfit').className = `text-2xl font-bold ${totalSessionProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+      document.getElementById('statHours').textContent = `${totalHours.toFixed(1)} hrs`;
+
+      const overallHourly = totalHours > 0 ? (totalSessionProfit / totalHours) : 0;
+      document.getElementById('statHourly').textContent = `$${overallHourly.toFixed(2)}/hr`;
+      document.getElementById('statHourly').className = `text-2xl font-bold ${overallHourly >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+    }
+
+    window.editSession = (id) => {
+      const s = loggedSessions.find(item => item.id === id);
+      if (!s) return;
+      document.getElementById('editSessionId').value = s.id;
+      document.getElementById('editGameType').value = s.gameType;
+      document.getElementById('editStakes').value = s.stakes;
+      document.getElementById('editBuyIn').value = s.buyIn;
+      document.getElementById('editCashOut').value = s.cashOut || 0;
+      document.getElementById('editStartHand').value = s.startHand;
+      document.getElementById('editEndHand').value = s.endHand || s.startHand;
+      document.getElementById('editStartTime').value = new Date(s.startTime).toISOString().slice(0, 16);
+      document.getElementById('editEndTime').value = new Date(s.endTime).toISOString().slice(0, 16);
+      document.getElementById('editNotes').value = s.notes || "";
+      document.getElementById('editModal').classList.remove('hidden');
+    };
+
+    window.editTransaction = (id) => {
+      const t = bankrollTransactions.find(item => item.id === id);
+      if (!t) return;
+      document.getElementById('editTxId').value = t.id;
+      document.getElementById('editTxType').value = t.type;
+      document.getElementById('editTxAmount').value = Math.abs(t.amount);
+      document.getElementById('editTxTimestamp').value = new Date(t.timestamp).toISOString().slice(0, 16);
+      document.getElementById('editTxNote').value = t.note || "";
+      document.getElementById('editTxModal').classList.remove('hidden');
+    };
+
+    window.deleteSession = async (id) => {
+      if (confirm("Are you sure you want to delete this session entry permanently?")) {
+        const fb = window.FirebaseServices;
+        await fb.deleteDoc(fb.doc(fb.db, 'sessions', id));
+      }
+    };
+
+    window.deleteTransaction = async (id) => {
+      if (confirm("Are you sure you want to delete this bankroll deposit/withdrawal record?")) {
+        const fb = window.FirebaseServices;
+        await fb.deleteDoc(fb.doc(fb.db, 'transactions', id));
+      }
+    };
+
+    function exportToCSV() {
+      if (loggedSessions.length === 0) {
+        alert("No session data available to export.");
+        return;
+      }
+      let csv = "Date (PT),Game,Stakes,Start Time (PT),End Time (PT),Hours,Start Hand,End Hand,Total Hands,Net Profit,$/100 Hands,Notes\n";
+      loggedSessions.forEach(s => {
+        const start = new Date(s.startTime);
+        const end = new Date(s.endTime);
+        const hrs = ((end - start) / 3600000).toFixed(2);
+        const hands = (s.endHand && s.startHand) ? (s.endHand - s.startHand) : 0;
+        const profit = s.netProfit || 0;
+        const per100 = hands >0 ? (profit / hands) * 100 : 0;
+        const cleanNotes = (s.notes || "").replace(/"/g, '""');
+        csv += `"${formatPacificDate(s.startTime)}","${s.gameType}","${s.stakes}","${formatPacificTime(s.startTime)}","${formatPacificTime(s.endTime)}",${hrs},${s.startHand},${s.endHand || ''},${hands},${profit},${per100.toFixed(2)},"${cleanNotes}"\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `poker_bankroll_export_${new Date().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  </script>
+</body>
+</html>
