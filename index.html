@@ -119,7 +119,10 @@
           </div>
         </div>
 
-        <div class="flex justify-end space-x-3">
+        <div class="flex justify-between items-center pt-1">
+          <button id="editActiveSessionBtn" class="bg-gray-700 hover:bg-gray-600 text-indigo-300 px-4 py-2 rounded-lg font-semibold text-xs transition">
+            ✏️ Edit Active Details
+          </button>
           <button id="endSessionBtn" class="bg-rose-600 hover:bg-rose-500 text-white px-5 py-2 rounded-lg font-bold transition shadow">
             End Session & Cash Out
           </button>
@@ -175,11 +178,12 @@
         </div>
         <div>
           <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Starting Wallet Balance ($)</label>
-          <input type="number" step="0.01" id="startBuyIn" required class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500" placeholder="e.g. 500">
+          <input type="number" step="0.01" inputmode="numeric" id="startBuyIn" required class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500" placeholder="e.g. 500">
         </div>
         <div>
           <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Starting Cumulative Hand #</label>
-          <input type="number" id="startHandNum" required class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500" placeholder="e.g. 10500">
+          <input type="number" inputmode="numeric" id="startHandNum" required class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500" placeholder="e.g. 10500">
+          <p id="handPreviousNote" class="text-xs text-indigo-400 mt-1 hidden"></p>
           <p id="handWarningText" class="text-xs text-amber-400 mt-1 hidden"></p>
         </div>
         
@@ -208,11 +212,12 @@
       <form id="endSessionForm" class="space-y-4">
         <div>
           <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Ending Wallet Balance ($)</label>
-          <input type="number" step="0.01" id="endCashOut" required class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500" placeholder="e.g. 750">
+          <input type="number" step="0.01" inputmode="numeric" id="endCashOut" required class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500" placeholder="e.g. 750">
         </div>
         <div>
           <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Ending Cumulative Hand #</label>
-          <input type="number" id="endHandNum" required class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500" placeholder="e.g. 10850">
+          <input type="number" inputmode="numeric" id="endHandNum" required class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500" placeholder="e.g. 10850">
+          <p id="handCalcNote" class="text-xs text-emerald-400 mt-1 hidden"></p>
         </div>
         
         <div class="pt-1 border-t border-gray-700">
@@ -251,7 +256,7 @@
         </div>
         <div>
           <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Amount ($)</label>
-          <input type="number" step="0.01" id="txAmount" required class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500" placeholder="e.g. 500">
+          <input type="number" step="0.01" inputmode="numeric" id="txAmount" required class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500" placeholder="e.g. 500">
         </div>
         <div>
           <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Note / Description</label>
@@ -291,7 +296,7 @@
         </div>
         <div>
           <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Amount ($)</label>
-          <input type="number" step="0.01" id="editTxAmount" required class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500">
+          <input type="number" step="0.01" inputmode="numeric" id="editTxAmount" required class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500">
         </div>
         <div>
           <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Date & Time (Pacific Time)</label>
@@ -338,21 +343,21 @@
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Starting Wallet ($)</label>
-            <input type="number" step="0.01" id="editBuyIn" required class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500">
+            <input type="number" step="0.01" inputmode="numeric" id="editBuyIn" required class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500">
           </div>
           <div>
             <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Ending Wallet ($)</label>
-            <input type="number" step="0.01" id="editCashOut" required class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500">
+            <input type="number" step="0.01" inputmode="numeric" id="editCashOut" required class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500">
           </div>
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Start Hand #</label>
-            <input type="number" id="editStartHand" required class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500">
+            <input type="number" inputmode="numeric" id="editStartHand" required class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500">
           </div>
           <div>
             <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">End Hand #</label>
-            <input type="number" id="editEndHand" required class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500">
+            <input type="number" inputmode="numeric" id="editEndHand" required class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500">
           </div>
         </div>
         <div>
@@ -362,6 +367,35 @@
         <div class="flex justify-end space-x-3 pt-2">
           <button type="button" id="closeEditModal" class="bg-gray-700 hover:bg-gray-600 text-gray-300 px-4 py-2 rounded-lg text-sm">Cancel</button>
           <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-lg font-semibold text-sm">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- EDIT ACTIVE SESSION MODAL -->
+  <div id="editActiveModal" class="hidden fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-gray-800 border border-gray-700 rounded-xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+      <h3 class="text-xl font-bold text-gray-100">Edit Active Session</h3>
+      <form id="editActiveForm" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Game Type</label>
+          <select id="editActiveGameType" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500"></select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Stakes</label>
+          <select id="editActiveStakes" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500"></select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Starting Wallet Balance ($)</label>
+          <input type="number" step="0.01" inputmode="numeric" id="editActiveBuyIn" required class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Starting Hand #</label>
+          <input type="number" inputmode="numeric" id="editActiveStartHand" required class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500">
+        </div>
+        <div class="flex justify-end space-x-3 pt-2">
+          <button type="button" id="closeEditActiveModal" class="bg-gray-700 hover:bg-gray-600 text-gray-300 px-4 py-2 rounded-lg text-sm">Cancel</button>
+          <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-lg font-semibold text-sm">Save Active Edits</button>
         </div>
       </form>
     </div>
@@ -396,8 +430,23 @@
       };
       fillSelect('startGameType', config.gameTypes);
       fillSelect('editGameType', config.gameTypes);
+      fillSelect('editActiveGameType', config.gameTypes);
       fillSelect('startStakes', config.stakes);
       fillSelect('editStakes', config.stakes);
+      fillSelect('editActiveStakes', config.stakes);
+
+      // Smart Default: Set last played game type and stakes
+      if (loggedSessions.length > 0) {
+        const last = loggedSessions[0];
+        if (last.gameType) {
+          const gtElem = document.getElementById('startGameType');
+          if (gtElem) gtElem.value = last.gameType;
+        }
+        if (last.stakes) {
+          const stElem = document.getElementById('startStakes');
+          if (stElem) stElem.value = last.stakes;
+        }
+      }
     }
 
     function initializeAppLogic() {
@@ -414,6 +463,24 @@
       });
       document.getElementById('toggleTxOverride').addEventListener('change', (e) => {
         document.getElementById('txOverrideContainer').classList.toggle('hidden', !e.target.checked);
+      });
+
+      // Live Calculation Note for Ending Hand Number
+      document.getElementById('endHandNum').addEventListener('input', (e) => {
+        const noteElem = document.getElementById('handCalcNote');
+        const endVal = parseInt(e.target.value, 10);
+        if (activeSession && activeSession.startHand && !isNaN(endVal)) {
+          const handsPlayed = endVal - activeSession.startHand;
+          if (handsPlayed >= 0) {
+            noteElem.textContent = `Total hands played this session: ${handsPlayed.toLocaleString()}`;
+            noteElem.classList.remove('hidden');
+          } else {
+            noteElem.textContent = `Warning: Ending hand is below starting hand.`;
+            noteElem.classList.remove('hidden');
+          }
+        } else {
+          noteElem.classList.add('hidden');
+        }
       });
 
       fb.onAuthStateChanged(fb.auth, (user) => {
@@ -453,14 +520,19 @@
         document.getElementById('startOverrideContainer').classList.add('hidden');
         document.getElementById('startTimeOverride').value = '';
 
+        populateDropdowns();
+
         const lastSession = loggedSessions[0];
+        const prevNoteElem = document.getElementById('handPreviousNote');
         const warningElem = document.getElementById('handWarningText');
+        
         if (lastSession && lastSession.endHand) {
-          warningElem.textContent = `Tip: Previous session ended at hand #${lastSession.endHand.toLocaleString()}`;
-          warningElem.classList.remove('hidden');
+          prevNoteElem.textContent = `Previous session ended at hand #${lastSession.endHand.toLocaleString()}`;
+          prevNoteElem.classList.remove('hidden');
         } else {
-          warningElem.classList.add('hidden');
+          prevNoteElem.classList.add('hidden');
         }
+        warningElem.classList.add('hidden');
         document.getElementById('startModal').classList.remove('hidden');
       });
 
@@ -513,11 +585,39 @@
         document.getElementById('toggleEndOverride').checked = false;
         document.getElementById('endOverrideContainer').classList.add('hidden');
         document.getElementById('endTimeOverride').value = '';
+        document.getElementById('handCalcNote').classList.add('hidden');
         document.getElementById('endModal').classList.remove('hidden');
       });
 
       document.getElementById('closeEndModal').addEventListener('click', () => {
         document.getElementById('endModal').classList.add('hidden');
+      });
+
+      // Edit Active Session Button Trigger
+      document.getElementById('editActiveSessionBtn').addEventListener('click', () => {
+        if (!activeSession) return;
+        document.getElementById('editActiveGameType').value = activeSession.gameType;
+        document.getElementById('editActiveStakes').value = activeSession.stakes;
+        document.getElementById('editActiveBuyIn').value = activeSession.buyIn;
+        document.getElementById('editActiveStartHand').value = activeSession.startHand;
+        document.getElementById('editActiveModal').classList.remove('hidden');
+      });
+
+      document.getElementById('closeEditActiveModal').addEventListener('click', () => {
+        document.getElementById('editActiveModal').classList.add('hidden');
+      });
+
+      document.getElementById('editActiveForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!activeSession) return;
+        const sessionRef = fb.doc(fb.db, 'sessions', activeSession.id);
+        await fb.updateDoc(sessionRef, {
+          gameType: document.getElementById('editActiveGameType').value,
+          stakes: document.getElementById('editActiveStakes').value,
+          buyIn: parseFloat(document.getElementById('editActiveBuyIn').value),
+          startHand: parseInt(document.getElementById('editActiveStartHand').value, 10)
+        });
+        document.getElementById('editActiveModal').classList.add('hidden');
       });
 
       document.getElementById('endSessionForm').addEventListener('submit', async (e) => {
@@ -626,7 +726,6 @@
       document.getElementById('exportCsvBtn').addEventListener('click', () => exportToCSV());
     }
 
-    // Attach listener for firebase-ready event or run immediately if already present
     if (window.FirebaseServices) {
       initializeAppLogic();
     } else {
