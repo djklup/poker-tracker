@@ -695,36 +695,45 @@
         const cashOut = parseFloat(document.getElementById('endCashOut').value);
         const netProfit = cashOut - activeSession.buyIn;
 
-        const sessionRef = fb.doc(fb.db, 'sessions', activeSession.id);
-        await fb.updateDoc(sessionRef, {
-          status: 'completed',
-          cashOut: cashOut,
-          netProfit: netProfit,
-          endHand: endHand,
-          endTime: endTimeISO,
-          notes: document.getElementById('endNotes').value || ""
-        });
-
-        // Calculate metrics for summary popup
+        // Capture session details BEFORE updating Firestore or resetting state
+        const gameType = activeSession.gameType;
+        const stakes = activeSession.stakes;
+        const startHand = activeSession.startHand;
         const startDt = new Date(activeSession.startTime);
         const endDt = new Date(endTimeISO);
         const durationHrs = Math.max(0.1, (endDt - startDt) / 3600000);
-        const totalHandsPlayed = endHand - activeSession.startHand;
+        const totalHandsPlayed = endHand - startHand;
         const hourlyRate = netProfit / durationHrs;
         const per100Rate = totalHandsPlayed > 0 ? (netProfit / totalHandsPlayed) * 100 : 0;
 
-        document.getElementById('endModal').classList.add('hidden');
-        document.getElementById('endSessionForm').reset();
+        try {
+          const fb = window.FirebaseServices;
+          const sessionRef = fb.doc(fb.db, 'sessions', activeSession.id);
+          await fb.updateDoc(sessionRef, {
+            status: 'completed',
+            cashOut: cashOut,
+            netProfit: netProfit,
+            endHand: endHand,
+            endTime: endTimeISO,
+            notes: document.getElementById('endNotes').value || ""
+          });
 
-        // Session Summary Popup Alert
-        alert(
-          `📊 Session Summary (${activeSession.gameType} ${activeSession.stakes})\n\n` +
-          `• Duration: ${durationHrs.toFixed(1)} hrs\n` +
-          `• Net Result: ${netProfit >= 0 ? '+' : ''}$${netProfit.toFixed(2)}\n` +
-          `• Hands Played: ${totalHandsPlayed.toLocaleString()}\n` +
-          `• Hourly Rate: ${hourlyRate >= 0 ? '+' : ''}$${hourlyRate.toFixed(2)}/hr\n` +
-          `• Rate / 100 Hands: ${per100Rate >= 0 ? '+' : ''}$${per100Rate.toFixed(2)} / 100 hands`
-        );
+          // Hide modal and reset form
+          document.getElementById('endModal').classList.add('hidden');
+          document.getElementById('endSessionForm').reset();
+
+          // Display Summary Popup Alert
+          alert(
+            `📊 Session Summary (${gameType} ${stakes})\n\n` +
+            `• Duration: ${durationHrs.toFixed(1)} hrs\n` +
+            `• Net Result: ${netProfit >= 0 ? '+' : ''}$${netProfit.toFixed(2)}\n` +
+            `• Hands Played: ${totalHandsPlayed.toLocaleString()}\n` +
+            `• Hourly Rate: ${hourlyRate >= 0 ? '+' : ''}$${hourlyRate.toFixed(2)}/hr\n` +
+            `• Rate / 100 Hands: ${per100Rate >= 0 ? '+' : ''}$${per100Rate.toFixed(2)} / 100 hands`
+          );
+        } catch (err) {
+          alert("Error ending session: " + err.message);
+        }
       });
 
       document.getElementById('txForm').addEventListener('submit', async (e) => {
