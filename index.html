@@ -208,40 +208,87 @@
     </div>
   </div>
 
-  <!-- END SESSION MODAL -->
+  <!-- END SESSION MODAL (WITH INTEGRATED SUMMARY STEP) -->
   <div id="endModal" class="hidden fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-gray-800 border border-gray-700 rounded-xl max-w-md w-full p-6 space-y-4 shadow-2xl">
-      <h3 class="text-xl font-bold text-gray-100">End Session & Cash Out</h3>
-      <form id="endSessionForm" class="space-y-4">
-        <div>
-          <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Ending Wallet Balance ($)</label>
-          <input type="number" step="0.01" inputmode="decimal" id="endCashOut" required class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500" placeholder="e.g. 750.50">
+      
+      <!-- STEP 1: Form View -->
+      <div id="endModalFormStep">
+        <h3 class="text-xl font-bold text-gray-100 mb-4">End Session & Cash Out</h3>
+        <form id="endSessionForm" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Ending Wallet Balance ($)</label>
+            <input type="number" step="0.01" inputmode="decimal" id="endCashOut" required class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500" placeholder="e.g. 750.50">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Ending Cumulative Hand #</label>
+            <input type="number" inputmode="numeric" id="endHandNum" required class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500" placeholder="e.g. 10850">
+            <p id="handCalcNote" class="text-xs text-emerald-400 mt-1 hidden"></p>
+          </div>
+          
+          <div class="pt-1 border-t border-gray-700">
+            <label class="flex items-center space-x-2 cursor-pointer text-xs font-medium text-gray-400">
+              <input type="checkbox" id="toggleEndOverride" class="rounded bg-gray-900 border-gray-700 text-indigo-600 focus:ring-indigo-500">
+              <span>Override End Date/Time (Pacific Time)</span>
+            </label>
+            <div id="endOverrideContainer" class="hidden mt-2">
+              <input type="datetime-local" id="endTimeOverride" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 text-sm focus:outline-none focus:border-indigo-500">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Session Notes / Key Hands</label>
+            <textarea id="endNotes" rows="3" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500" placeholder="How did the game run? Memorable hands, table dynamics, etc."></textarea>
+          </div>
+          <div class="flex justify-end space-x-3 pt-2">
+            <button type="button" id="closeEndModal" class="bg-gray-700 hover:bg-gray-600 text-gray-300 px-4 py-2 rounded-lg text-sm">Cancel</button>
+            <button type="submit" class="bg-rose-600 hover:bg-rose-500 text-white px-5 py-2 rounded-lg font-semibold text-sm">Save & Finish</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- STEP 2: Modern Summary Dashboard View -->
+      <div id="endModalSummaryStep" class="hidden space-y-5 text-center">
+        <div class="inline-flex items-center justify-center w-12 h-12 bg-emerald-500/10 text-emerald-400 rounded-full border border-emerald-500/20 text-2xl mb-1">
+          🏆
         </div>
         <div>
-          <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Ending Cumulative Hand #</label>
-          <input type="number" inputmode="numeric" id="endHandNum" required class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500" placeholder="e.g. 10850">
-          <p id="handCalcNote" class="text-xs text-emerald-400 mt-1 hidden"></p>
+          <h3 class="text-2xl font-bold text-gray-100">Session Complete!</h3>
+          <p id="summaryGameTitle" class="text-xs font-semibold text-indigo-400 uppercase tracking-wider mt-1">NLH ($1/$2)</p>
         </div>
-        
-        <div class="pt-1 border-t border-gray-700">
-          <label class="flex items-center space-x-2 cursor-pointer text-xs font-medium text-gray-400">
-            <input type="checkbox" id="toggleEndOverride" class="rounded bg-gray-900 border-gray-700 text-indigo-600 focus:ring-indigo-500">
-            <span>Override End Date/Time (Pacific Time)</span>
-          </label>
-          <div id="endOverrideContainer" class="hidden mt-2">
-            <input type="datetime-local" id="endTimeOverride" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 text-sm focus:outline-none focus:border-indigo-500">
+
+        <!-- Net Result Banner -->
+        <div id="summaryNetCard" class="bg-gray-900 p-4 rounded-xl border border-gray-700 shadow-inner">
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Session Net Profit</div>
+          <div id="summaryNetProfit" class="text-3xl font-extrabold text-emerald-400">+$0.00</div>
+          <div id="summaryWalletRange" class="text-xs text-gray-400 mt-1">$0.00 cashout - $0.00 buyin</div>
+        </div>
+
+        <!-- Key Metrics Grid -->
+        <div class="grid grid-cols-2 gap-3 text-left">
+          <div class="bg-gray-900 p-3.5 rounded-lg border border-gray-700">
+            <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Duration</div>
+            <div id="summaryDuration" class="text-base font-bold text-gray-100 mt-0.5">0.0 hrs</div>
+          </div>
+          <div class="bg-gray-900 p-3.5 rounded-lg border border-gray-700">
+            <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Hands Played</div>
+            <div id="summaryHands" class="text-base font-bold text-gray-100 mt-0.5">0 hands</div>
+          </div>
+          <div class="bg-gray-900 p-3.5 rounded-lg border border-gray-700">
+            <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Hourly Rate</div>
+            <div id="summaryHourly" class="text-base font-bold text-gray-100 mt-0.5">$0.00/hr</div>
+          </div>
+          <div class="bg-gray-900 p-3.5 rounded-lg border border-gray-700">
+            <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">$/100 Hands</div>
+            <div id="summaryPer100" class="text-base font-bold text-gray-100 mt-0.5">$0.00</div>
           </div>
         </div>
 
-        <div>
-          <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Session Notes / Key Hands</label>
-          <textarea id="endNotes" rows="3" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-indigo-500" placeholder="How did the game run? Memorable hands, table dynamics, etc."></textarea>
-        </div>
-        <div class="flex justify-end space-x-3 pt-2">
-          <button type="button" id="closeEndModal" class="bg-gray-700 hover:bg-gray-600 text-gray-300 px-4 py-2 rounded-lg text-sm">Cancel</button>
-          <button type="submit" class="bg-rose-600 hover:bg-rose-500 text-white px-5 py-2 rounded-lg font-semibold text-sm">Save & Finish</button>
-        </div>
-      </form>
+        <button id="dismissSummaryBtn" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 rounded-lg transition shadow-lg mt-2">
+          Done & Return to Dashboard
+        </button>
+      </div>
+
     </div>
   </div>
 
@@ -645,11 +692,20 @@
         document.getElementById('endOverrideContainer').classList.add('hidden');
         document.getElementById('endTimeOverride').value = '';
         document.getElementById('handCalcNote').classList.add('hidden');
+        
+        // Show Form Step, Hide Summary Step
+        document.getElementById('endModalFormStep').classList.remove('hidden');
+        document.getElementById('endModalSummaryStep').classList.add('hidden');
         document.getElementById('endModal').classList.remove('hidden');
       });
 
       document.getElementById('closeEndModal').addEventListener('click', () => {
         document.getElementById('endModal').classList.add('hidden');
+      });
+
+      document.getElementById('dismissSummaryBtn').addEventListener('click', () => {
+        document.getElementById('endModal').classList.add('hidden');
+        document.getElementById('endSessionForm').reset();
       });
 
       document.getElementById('editActiveSessionBtn').addEventListener('click', () => {
@@ -693,9 +749,9 @@
         const endTimeISO = (isOverride && overrideTime) ? pacificInputToISO(overrideTime) : new Date().toISOString();
         
         const cashOut = parseFloat(document.getElementById('endCashOut').value);
-        const netProfit = cashOut - activeSession.buyIn;
+        const buyIn = activeSession.buyIn;
+        const netProfit = cashOut - buyIn;
 
-        // Capture session details BEFORE updating Firestore or resetting state
         const gameType = activeSession.gameType;
         const stakes = activeSession.stakes;
         const startHand = activeSession.startHand;
@@ -718,19 +774,29 @@
             notes: document.getElementById('endNotes').value || ""
           });
 
-          // Hide modal and reset form
-          document.getElementById('endModal').classList.add('hidden');
-          document.getElementById('endSessionForm').reset();
+          // Populate Summary Step UI Elements
+          document.getElementById('summaryGameTitle').textContent = `${gameType} (${stakes})`;
+          
+          const summaryNetElem = document.getElementById('summaryNetProfit');
+          summaryNetElem.textContent = `${netProfit >= 0 ? '+' : ''}$${netProfit.toFixed(2)}`;
+          summaryNetElem.className = `text-3xl font-extrabold ${netProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+          
+          document.getElementById('summaryWalletRange').textContent = `$${cashOut.toFixed(2)} cashout - $${buyIn.toFixed(2)} buyin`;
+          document.getElementById('summaryDuration').textContent = `${durationHrs.toFixed(1)} hrs`;
+          document.getElementById('summaryHands').textContent = `${totalHandsPlayed.toLocaleString()} hands`;
+          
+          const summaryHourlyElem = document.getElementById('summaryHourly');
+          summaryHourlyElem.textContent = `${hourlyRate >= 0 ? '+' : ''}$${hourlyRate.toFixed(2)}/hr`;
+          summaryHourlyElem.className = `text-base font-bold ${hourlyRate >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
 
-          // Display Summary Popup Alert
-          alert(
-            `📊 Session Summary (${gameType} ${stakes})\n\n` +
-            `• Duration: ${durationHrs.toFixed(1)} hrs\n` +
-            `• Net Result: ${netProfit >= 0 ? '+' : ''}$${netProfit.toFixed(2)}\n` +
-            `• Hands Played: ${totalHandsPlayed.toLocaleString()}\n` +
-            `• Hourly Rate: ${hourlyRate >= 0 ? '+' : ''}$${hourlyRate.toFixed(2)}/hr\n` +
-            `• Rate / 100 Hands: ${per100Rate >= 0 ? '+' : ''}$${per100Rate.toFixed(2)} / 100 hands`
-          );
+          const summaryPer100Elem = document.getElementById('summaryPer100');
+          summaryPer100Elem.textContent = `${per100Rate >= 0 ? '+' : ''}$${per100Rate.toFixed(2)}`;
+          summaryPer100Elem.className = `text-base font-bold ${per100Rate >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+
+          // Switch modal view to Summary step
+          document.getElementById('endModalFormStep').classList.add('hidden');
+          document.getElementById('endModalSummaryStep').classList.remove('hidden');
+
         } catch (err) {
           alert("Error ending session: " + err.message);
         }
@@ -896,7 +962,6 @@
           const hourly = profit / durationHrs;
           const per100 = totalHands > 0 ? (profit / totalHands) * 100 : 0;
           
-          // Different icon for PLO vs NLH
           const isPLO = item.gameType && item.gameType.toLowerCase().includes('plo');
           const gameIcon = isPLO ? '♣️' : '♠️';
 
