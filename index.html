@@ -674,21 +674,37 @@
         document.getElementById('txForm').reset();
       });
 
+      // Function to safely parse a datetime-local input string (YYYY-MM-DDTHH:mm) into an ISO string
+      function parseLocalDateTimeToISO(dateTimeString) {
+        if (!dateTimeString) return new Date().toISOString();
+        // Splits local string into parts to construct a local Date object without UTC offset shifting
+        const [datePart, timePart] = dateTimeString.split('T');
+        const [year, month, day] = datePart.split('-').map(Number);
+        const [hours, minutes] = timePart.split(':').map(Number);
+        return new Date(year, month - 1, day, hours, minutes).toISOString();
+      }
+      
+      // Fixed Edit Session Form Handler
       document.getElementById('editSessionForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const confirmEdit = confirm("Are you sure you want to save these edits? This will recalculate the session's net profit and duration.");
         if (!confirmEdit) return;
-
+      
         const sessionId = document.getElementById('editSessionId').value;
         const buyIn = parseFloat(document.getElementById('editBuyIn').value);
         const cashOut = parseFloat(document.getElementById('editCashOut').value);
-
+      
+        // Parse local inputs without UTC shifting
+        const startTimeISO = parseLocalDateTimeToISO(document.getElementById('editStartTime').value);
+        const endTimeISO = parseLocalDateTimeToISO(document.getElementById('editEndTime').value);
+      
+        const fb = window.FirebaseServices;
         const sessionRef = fb.doc(fb.db, 'sessions', sessionId);
         await fb.updateDoc(sessionRef, {
           gameType: document.getElementById('editGameType').value,
           stakes: document.getElementById('editStakes').value,
-          startTime: new Date(document.getElementById('editStartTime').value).toISOString(),
-          endTime: new Date(document.getElementById('editEndTime').value).toISOString(),
+          startTime: startTimeISO,
+          endTime: endTimeISO,
           buyIn: buyIn,
           cashOut: cashOut,
           netProfit: cashOut - buyIn,
@@ -696,7 +712,7 @@
           endHand: parseInt(document.getElementById('editEndHand').value, 10),
           notes: document.getElementById('editNotes').value
         });
-
+      
         document.getElementById('editModal').classList.add('hidden');
       });
 
@@ -798,7 +814,7 @@
         return;
       }
 
-      tbody.innerHTML = combined.map(item => {
+    tbody.innerHTML = combined.map(item => {
         if (item.entryType === 'session') {
           const start = new Date(item.startTime);
           const end = new Date(item.endTime);
@@ -810,7 +826,11 @@
 
           return `
             <tr class="hover:bg-gray-750 transition border-b border-gray-700/50">
-              <td class="py-3 px-4">${formatPacificDate(item.startTime)}</td>
+              <!-- UPDATED: Displays both Date and Time stacked vertically -->
+              <td class="py-3 px-4">
+                <div class="font-medium text-gray-200">${formatPacificDate(item.startTime)}</div>
+                <div class="text-xs text-gray-400">${formatPacificTime(item.startTime)}</div>
+              </td>
               <td class="py-3 px-4 font-semibold text-gray-200">
                 ♠️ ${item.gameType} <span class="text-xs text-gray-400">(${item.stakes})</span>
               </td>
@@ -829,6 +849,7 @@
             </tr>
           `;
         } else {
+          // (Transaction rows follow here...)
           const isDeposit = item.type === 'deposit';
           return `
             <tr class="hover:bg-gray-750 transition border-b border-gray-700/50 bg-gray-850/30">
