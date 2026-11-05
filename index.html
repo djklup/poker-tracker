@@ -14,6 +14,9 @@
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
 
+  <!-- Chart.js CDN for Bankroll & Performance Graphs -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <!-- External App Configuration File -->
   <script src="options.js"></script>
 </head>
@@ -141,6 +144,24 @@
         </div>
       </div>
 
+      <!-- PERFORMANCE GRAPH SECTION -->
+      <div class="bg-gray-800 p-5 rounded-xl border border-gray-700 shadow-md space-y-4">
+        <div class="flex flex-wrap justify-between items-center gap-3">
+          <h3 class="text-base font-bold text-gray-100">Performance & Bankroll Growth</h3>
+          <div class="flex items-center space-x-2">
+            <label class="text-xs font-semibold text-gray-400 uppercase">X-Axis Metric:</label>
+            <select id="graphMetricSelect" class="bg-gray-900 border border-gray-700 rounded-lg px-3 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-indigo-500">
+              <option value="hands">Cumulative Hands Played</option>
+              <option value="hours">Cumulative Hours Played</option>
+              <option value="sessions">Session Timeline</option>
+            </select>
+          </div>
+        </div>
+        <div class="relative w-full h-72">
+          <canvas id="performanceChart"></canvas>
+        </div>
+      </div>
+
       <!-- FILTER CONTROLS BAR -->
       <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 flex flex-wrap gap-3 items-center justify-between shadow-md">
         <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
@@ -148,8 +169,6 @@
             <label class="text-xs font-semibold text-gray-400 uppercase">Game:</label>
             <select id="filterGame" class="bg-gray-900 border border-gray-700 rounded-lg px-3 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-indigo-500">
               <option value="all">All Games</option>
-              <option value="nlh">NLH</option>
-              <option value="plo">PLO</option>
             </select>
           </div>
           <div class="flex items-center space-x-2">
@@ -505,6 +524,7 @@
     let loggedSessions = [];
     let bankrollTransactions = [];
     let timerInterval = null;
+    let performanceChartInstance = null;
 
     const APP_VERSION = "v0.43"; 
     document.getElementById('appVersionDisplay').textContent = APP_VERSION;
@@ -565,24 +585,30 @@
       return `${localDateTimeString}:00${offset}`;
     }
 
+    // Populate all form selects & filter dropdowns dynamically from options.js
     function populateDropdowns() {
       const config = window.POKER_CONFIG || { stakes: [], gameTypes: [] };
-      const fillSelect = (elemId, items) => {
+      
+      const fillSelect = (elemId, items, includeAllOption = false, allLabel = 'All Games') => {
         const select = document.getElementById(elemId);
         if (!select) return;
-        select.innerHTML = items.map(i => `<option value="${i.value}">${i.label}</option>`).join('');
+        let html = '';
+        if (includeAllOption) {
+          html += `<option value="all">${allLabel}</option>`;
+        }
+        html += items.map(i => `<option value="${i.value}">${i.label}</option>`).join('');
+        select.innerHTML = html;
       };
+
       fillSelect('startGameType', config.gameTypes);
       fillSelect('editGameType', config.gameTypes);
       fillSelect('editActiveGameType', config.gameTypes);
+      fillSelect('filterGame', config.gameTypes, true, 'All Games');
+
       fillSelect('startStakes', config.stakes);
       fillSelect('editStakes', config.stakes);
       fillSelect('editActiveStakes', config.stakes);
-
-      const stakesFilter = document.getElementById('filterStakes');
-      if (stakesFilter) {
-        stakesFilter.innerHTML = '<option value="all">All Stakes</option>' + config.stakes.map(s => `<option value="${s.value}">${s.label}</option>`).join('');
-      }
+      fillSelect('filterStakes', config.stakes, true, 'All Stakes');
 
       if (loggedSessions.length > 0) {
         const last = loggedSessions[0];
@@ -600,7 +626,6 @@
     document.addEventListener('DOMContentLoaded', () => {
       const loginBtn = document.getElementById('loginBtn');
 
-      // Robust, error-handled Google Sign In click logic
       if (loginBtn) {
         loginBtn.onclick = async () => {
           const fb = window.FirebaseServices;
@@ -624,15 +649,17 @@
 
       populateDropdowns();
 
-      // Filter event listeners
-      document.getElementById('filterGame').addEventListener('change', renderUnifiedActivityTable);
-      document.getElementById('filterStakes').addEventListener('change', renderUnifiedActivityTable);
-      document.getElementById('filterTimeframe').addEventListener('change', renderUnifiedActivityTable);
+      // Filter and Graph event listeners
+      document.getElementById('filterGame').addEventListener('change', renderDashboardData);
+      document.getElementById('filterStakes').addEventListener('change', renderDashboardData);
+      document.getElementById('filterTimeframe').addEventListener('change', renderDashboardData);
+      document.getElementById('graphMetricSelect').addEventListener('change', renderPerformanceChart);
+      
       document.getElementById('resetFiltersBtn').addEventListener('click', () => {
         document.getElementById('filterGame').value = 'all';
         document.getElementById('filterStakes').value = 'all';
         document.getElementById('filterTimeframe').value = 'all';
-        renderUnifiedActivityTable();
+        renderDashboardData();
       });
 
       document.getElementById('toggleStartOverride').addEventListener('change', (e) => {
@@ -982,7 +1009,7 @@
           }
         });
         renderActiveSessionBar();
-        renderUnifiedActivityTable();
+        renderDashboardData();
       });
 
       const qTx = fb.query(fb.collection(fb.db, 'transactions'), fb.orderBy('timestamp', 'desc'));
@@ -992,7 +1019,7 @@
           const data = { id: docSnap.id, ...docSnap.data() };
           if (data.userId === currentUser.uid) bankrollTransactions.push(data);
         });
-        renderUnifiedActivityTable();
+        renderDashboardData();
       });
     }
 
@@ -1041,11 +1068,7 @@
         if (timeframeFilter === 'month' && (timestamp.getFullYear() !== currentYear || timestamp.getMonth() !== currentMonth)) return false;
 
         if (isSession) {
-          if (gameFilter !== 'all') {
-            const isPlo = item.gameType && item.gameType.toLowerCase().includes('plo');
-            if (gameFilter === 'plo' && !isPlo) return false;
-            if (gameFilter === 'nlh' && isPlo) return false;
-          }
+          if (gameFilter !== 'all' && item.gameType !== gameFilter) return false;
           if (stakesFilter !== 'all' && item.stakes !== stakesFilter) return false;
         }
         return true;
@@ -1055,6 +1078,11 @@
       const filteredTx = bankrollTransactions.filter(t => filterItem(t, false));
 
       return { filteredSessions, filteredTx };
+    }
+
+    function renderDashboardData() {
+      renderUnifiedActivityTable();
+      renderPerformanceChart();
     }
 
     function renderUnifiedActivityTable() {
@@ -1276,6 +1304,94 @@
       const overallHourly = totalHours > 0 ? (totalSessionProfit / totalHours) : 0;
       document.getElementById('statHourly').textContent = `$${overallHourly.toFixed(2)}/hr`;
       document.getElementById('statHourly').className = `text-xl md:text-2xl font-bold ${overallHourly >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+    }
+
+    function renderPerformanceChart() {
+      const ctx = document.getElementById('performanceChart').getContext('2d');
+      const metric = document.getElementById('graphMetricSelect').value;
+
+      const { filteredSessions } = getFilteredEntries();
+      // Sort chronologically ascending for the graph timeline
+      const sorted = [...filteredSessions].sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
+
+      let labels = [];
+      let netData = [];
+      let cumulativeNet = 0;
+      let cumulativeHands = 0;
+      let cumulativeHours = 0;
+
+      sorted.forEach(s => {
+        const profit = s.netProfit || 0;
+        cumulativeNet += profit;
+        
+        const start = new Date(s.startTime);
+        const end = new Date(s.endTime);
+        const durationHrs = Math.max(0, (end - start) / 3600000);
+        cumulativeHours += durationHrs;
+
+        const hands = (s.endHand && s.startHand) ? (s.endHand - s.startHand) : 0;
+        cumulativeHands += hands;
+
+        if (metric === 'hands') {
+          labels.push(`${cumulativeHands.toLocaleString()} hands`);
+        } else if (metric === 'hours') {
+          labels.push(`${cumulativeHours.toFixed(1)} hrs`);
+        } else {
+          labels.push(formatPacificDate(s.startTime));
+        }
+
+        netData.push(cumulativeNet);
+      });
+
+      if (performanceChartInstance) {
+        performanceChartInstance.destroy();
+      }
+
+      performanceChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels.length > 0 ? labels : ['Start'],
+          datasets: [{
+            label: 'Total Net Profit ($)',
+            data: netData.length > 0 ? netData : [0],
+            borderColor: '#34d399',
+            backgroundColor: 'rgba(52, 211, 153, 0.1)',
+            borderWidth: 2.5,
+            fill: true,
+            tension: 0.2,
+            pointRadius: 4,
+            pointBackgroundColor: '#34d399'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return ` Net Profit: $${context.parsed.y.toFixed(2)}`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: 'rgba(55, 65, 81, 0.5)' },
+              ticks: { color: '#9ca3af', font: { size: 11 } }
+            },
+            y: {
+              grid: { color: 'rgba(55, 65, 81, 0.5)' },
+              ticks: { 
+                color: '#9ca3af', 
+                font: { size: 11 },
+                callback: function(value) { return '$' + value; }
+              }
+            }
+          }
+        }
+      });
     }
 
     window.editSession = (id) => {
