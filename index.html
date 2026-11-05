@@ -26,13 +26,13 @@
       <div>
         <h1 class="text-base md:text-xl font-bold tracking-wide leading-tight">Poker Bankroll Tracker</h1>
         <div class="flex items-center space-x-2">
-          <span id="appVersionDisplay" class="text-[10px] text-indigo-400 font-mono">v1.0.42</span>
+          <span id="appVersionDisplay" class="text-[10px] text-indigo-400 font-mono">v1.0.43</span>
         </div>
       </div>
     </div>
     <div id="authSection" class="flex items-center space-x-3">
       <button id="loginBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg font-medium transition shadow text-sm">
-        Sign in
+        Sign in with Google
       </button>
       <div id="userInfo" class="hidden flex items-center space-x-3">
         <span id="userName" class="hidden md:inline text-sm font-medium text-gray-300"></span>
@@ -219,7 +219,7 @@
     </div>
   </div>
 
-  <!-- END SESSION MODAL -->
+  <!-- END SESSION MODAL (WITH INTEGRATED SUMMARY STEP) -->
   <div id="endModal" class="hidden fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-gray-800 border border-gray-700 rounded-xl max-w-md w-full p-6 space-y-4 shadow-2xl">
       
@@ -774,4 +774,451 @@
         const durationHrs = Math.max(0.1, (endDt - startDt) / 3600000);
         const totalHandsPlayed = endHand - startHand;
         const hourlyRate = netProfit / durationHrs;
-        const per
+        const per100Rate = totalHandsPlayed > 0 ? (netProfit / totalHandsPlayed) * 100 : 0;
+
+        try {
+          const fb = window.FirebaseServices;
+          const sessionRef = fb.doc(fb.db, 'sessions', activeSession.id);
+          await fb.updateDoc(sessionRef, {
+            status: 'completed',
+            cashOut: cashOut,
+            netProfit: netProfit,
+            endHand: endHand,
+            endTime: endTimeISO,
+            notes: document.getElementById('endNotes').value || ""
+          });
+
+          document.getElementById('summaryGameTitle').textContent = `${gameType} (${stakes})`;
+          
+          const summaryNetElem = document.getElementById('summaryNetProfit');
+          summaryNetElem.textContent = `${netProfit >= 0 ? '+' : ''}$${netProfit.toFixed(2)}`;
+          summaryNetElem.className = `text-3xl font-extrabold ${netProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+          
+          document.getElementById('summaryWalletRange').textContent = `$${cashOut.toFixed(2)} cashout - $${buyIn.toFixed(2)} buyin`;
+          document.getElementById('summaryDuration').textContent = `${durationHrs.toFixed(1)} hrs`;
+          document.getElementById('summaryHands').textContent = `${totalHandsPlayed.toLocaleString()} hands`;
+          
+          const summaryHourlyElem = document.getElementById('summaryHourly');
+          summaryHourlyElem.textContent = `${hourlyRate >= 0 ? '+' : ''}$${hourlyRate.toFixed(2)}/hr`;
+          summaryHourlyElem.className = `text-base font-bold ${hourlyRate >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+
+          const summaryPer100Elem = document.getElementById('summaryPer100');
+          summaryPer100Elem.textContent = `${per100Rate >= 0 ? '+' : ''}$${per100Rate.toFixed(2)}`;
+          summaryPer100Elem.className = `text-base font-bold ${per100Rate >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+
+          document.getElementById('endModalFormStep').classList.add('hidden');
+          document.getElementById('endModalSummaryStep').classList.remove('hidden');
+
+        } catch (err) {
+          alert("Error ending session: " + err.message);
+        }
+      });
+
+      document.getElementById('txForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const txType = document.getElementById('txType').value;
+        const amount = parseFloat(document.getElementById('txAmount').value);
+        const isOverride = document.getElementById('toggleTxOverride').checked;
+        const overrideTime = document.getElementById('txTimeOverride').value;
+        const timestampISO = (isOverride && overrideTime) ? pacificInputToISO(overrideTime) : new Date().toISOString();
+
+        await fb.addDoc(fb.collection(fb.db, 'transactions'), {
+          userId: currentUser.uid,
+          type: txType,
+          amount: txType === 'deposit' ? amount : -amount,
+          note: document.getElementById('txNote').value || "",
+          timestamp: timestampISO,
+          createdAt: fb.serverTimestamp()
+        });
+
+        document.getElementById('txModal').classList.add('hidden');
+        document.getElementById('txForm').reset();
+      });
+
+      document.getElementById('editSessionForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const confirmEdit = confirm("Are you sure you want to save these edits? This will recalculate the session's net profit and duration.");
+        if (!confirmEdit) return;
+
+        const sessionId = document.getElementById('editSessionId').value;
+        const buyIn = parseFloat(document.getElementById('editBuyIn').value);
+        const cashOut = parseFloat(document.getElementById('editCashOut').value);
+
+        const startTimeISO = pacificInputToISO(document.getElementById('editStartTime').value);
+        const endTimeISO = pacificInputToISO(document.getElementById('editEndTime').value);
+
+        const sessionRef = fb.doc(fb.db, 'sessions', sessionId);
+        await fb.updateDoc(sessionRef, {
+          gameType: document.getElementById('editGameType').value,
+          stakes: document.getElementById('editStakes').value,
+          startTime: startTimeISO,
+          endTime: endTimeISO,
+          buyIn: buyIn,
+          cashOut: cashOut,
+          netProfit: cashOut - buyIn,
+          startHand: parseInt(document.getElementById('editStartHand').value, 10),
+          endHand: parseInt(document.getElementById('editEndHand').value, 10),
+          notes: document.getElementById('editNotes').value
+        });
+
+        document.getElementById('editModal').classList.add('hidden');
+      });
+
+      document.getElementById('closeEditModal').addEventListener('click', () => {
+        document.getElementById('editModal').classList.add('hidden');
+      });
+
+      document.getElementById('editTxForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const txId = document.getElementById('editTxId').value;
+        const txType = document.getElementById('editTxType').value;
+        const amount = parseFloat(document.getElementById('editTxAmount').value);
+        const timestampISO = pacificInputToISO(document.getElementById('editTxTimestamp').value);
+
+        const txRef = fb.doc(fb.db, 'transactions', txId);
+        await fb.updateDoc(txRef, {
+          type: txType,
+          amount: txType === 'deposit' ? amount : -amount,
+          timestamp: timestampISO,
+          note: document.getElementById('editTxNote').value || ""
+        });
+
+        document.getElementById('editTxModal').classList.add('hidden');
+      });
+
+      document.getElementById('closeEditTxModal').addEventListener('click', () => {
+        document.getElementById('editTxModal').classList.add('hidden');
+      });
+
+      document.getElementById('exportCsvBtn').addEventListener('click', () => exportToCSV());
+    });
+
+    function attachFirestoreListeners(fb) {
+      const qSessions = fb.query(fb.collection(fb.db, 'sessions'), fb.orderBy('startTime', 'desc'));
+      fb.onSnapshot(qSessions, (snapshot) => {
+        loggedSessions = [];
+        activeSession = null;
+        snapshot.docs.forEach(docSnap => {
+          const data = { id: docSnap.id, ...docSnap.data() };
+          if (data.userId === currentUser.uid) {
+            if (data.status === 'active') activeSession = data;
+            else loggedSessions.push(data);
+          }
+        });
+        renderActiveSessionBar();
+        renderUnifiedActivityTable();
+        calculateOverallStats();
+      });
+
+      const qTx = fb.query(fb.collection(fb.db, 'transactions'), fb.orderBy('timestamp', 'desc'));
+      fb.onSnapshot(qTx, (snapshot) => {
+        bankrollTransactions = [];
+        snapshot.docs.forEach(docSnap => {
+          const data = { id: docSnap.id, ...docSnap.data() };
+          if (data.userId === currentUser.uid) bankrollTransactions.push(data);
+        });
+        renderUnifiedActivityTable();
+        calculateOverallStats();
+      });
+    }
+
+    function renderActiveSessionBar() {
+      const bar = document.getElementById('activeSessionBar');
+      if (!activeSession) {
+        bar.classList.add('hidden');
+        if (timerInterval) clearInterval(timerInterval);
+        return;
+      }
+      bar.classList.remove('hidden');
+      const gameIcon = activeSession.gameType && activeSession.gameType.toLowerCase().includes('plo') ? '♣️' : '♠️';
+      document.getElementById('activeGameDetails').textContent = `${gameIcon} ${activeSession.gameType} (${activeSession.stakes})`;
+      document.getElementById('activeBuyIn').textContent = `$${activeSession.buyIn.toFixed(2)}`;
+      document.getElementById('activeStartTime').textContent = formatPacificTime(activeSession.startTime);
+      document.getElementById('activeStartHand').textContent = activeSession.startHand.toLocaleString();
+
+      if (timerInterval) clearInterval(timerInterval);
+      const updateTimer = () => {
+        const diffMs = new Date() - new Date(activeSession.startTime);
+        const hrs = Math.floor(diffMs / 3600000);
+        const mins = Math.floor((diffMs % 3600000) / 60000);
+        const secs = Math.floor((diffMs % 60000) / 1000);
+        document.getElementById('activeTimer').textContent = 
+          `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+      };
+      updateTimer();
+      timerInterval = setInterval(updateTimer, 1000);
+    }
+
+    function renderUnifiedActivityTable() {
+      const tbody = document.getElementById('activityTableBody');
+      const mobileContainer = document.getElementById('mobileActivityCards');
+
+      const combined = [
+        ...loggedSessions.map(s => ({ ...s, entryType: 'session', sortTime: new Date(s.startTime).getTime() })),
+        ...bankrollTransactions.map(t => ({ ...t, entryType: 'transaction', sortTime: new Date(t.timestamp).getTime() }))
+      ].sort((a, b) => b.sortTime - a.sortTime);
+
+      document.getElementById('activityCount').textContent = `${combined.length} entries`;
+
+      if (combined.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" class="py-8 text-center text-gray-500">No recorded sessions or transactions found.</td></tr>`;
+        mobileContainer.innerHTML = `<div class="p-6 text-center text-gray-500 text-sm">No recorded sessions or transactions found.</div>`;
+        return;
+      }
+
+      // 1. RENDER DESKTOP TABLE
+      tbody.innerHTML = combined.map(item => {
+        if (item.entryType === 'session') {
+          const start = new Date(item.startTime);
+          const end = new Date(item.endTime);
+          const durationHrs = Math.max(0.1, (end - start) / 3600000);
+          const totalHands = (item.endHand && item.startHand) ? (item.endHand - item.startHand) : 0;
+          const profit = item.netProfit || 0;
+          const hourly = profit / durationHrs;
+          const per100 = totalHands > 0 ? (profit / totalHands) * 100 : 0;
+          
+          const isPLO = item.gameType && item.gameType.toLowerCase().includes('plo');
+          const gameIcon = isPLO ? '♣️' : '♠️';
+
+          return `
+            <tr class="hover:bg-gray-750 transition border-b border-gray-700/50">
+              <td class="py-3 px-4">
+                <div class="font-medium text-gray-200">${formatPacificDate(item.startTime)}</div>
+                <div class="text-xs text-gray-400">${formatPacificTime(item.startTime)}</div>
+              </td>
+              <td class="py-3 px-4 font-semibold text-gray-200">
+                ${gameIcon} ${item.gameType} <span class="text-xs text-gray-400">(${item.stakes})</span>
+              </td>
+              <td class="py-3 px-4">${durationHrs.toFixed(1)} hrs</td>
+              <td class="py-3 px-4">
+                <div>${totalHands > 0 ? totalHands.toLocaleString() + ' hands' : '--'}</div>
+                <div class="text-xs text-gray-400">${item.startHand || 0} - ${item.endHand || 0}</div>
+              </td>
+              <td class="py-3 px-4 font-bold ${profit >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
+                <div>${profit >= 0 ? '+' : ''}$${profit.toFixed(2)}</div>
+                <div class="text-xs text-gray-400 font-normal">$${(item.cashOut || 0).toFixed(2)} - $${(item.buyIn || 0).toFixed(2)}</div>
+              </td>
+              <td class="py-3 px-4 ${hourly >= 0 ? 'text-emerald-400' : 'text-rose-400'}">$${hourly.toFixed(2)}/hr</td>
+              <td class="py-3 px-4 ${per100 >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${totalHands > 0 ? (per100 >= 0 ? '+' : '') + '$' + per100.toFixed(2) : '--'}</td>
+              <td class="py-3 px-4 max-w-xs truncate text-xs text-gray-400" title="${item.notes || ''}">${item.notes || '--'}</td>
+              <td class="py-3 px-4 text-right space-x-2">
+                <button onclick="window.editSession('${item.id}')" class="text-indigo-400 hover:text-indigo-300 font-medium text-xs">Edit</button>
+                <button onclick="window.deleteSession('${item.id}')" class="text-rose-400 hover:text-rose-300 font-medium text-xs">Delete</button>
+              </td>
+            </tr>
+          `;
+        } else {
+          const isDeposit = item.type === 'deposit';
+          return `
+            <tr class="hover:bg-gray-750 transition border-b border-gray-700/50 bg-gray-850/30">
+              <td class="py-3 px-4">
+                <div class="font-medium text-gray-200">${formatPacificDate(item.timestamp)}</div>
+                <div class="text-xs text-gray-400">${formatPacificTime(item.timestamp)}</div>
+              </td>
+              <td class="py-3 px-4 font-semibold capitalize ${isDeposit ? 'text-emerald-400' : 'text-amber-400'}">
+                💳 Bankroll ${item.type}
+              </td>
+              <td class="py-3 px-4 text-gray-500">--</td>
+              <td class="py-3 px-4 text-gray-500">--</td>
+              <td class="py-3 px-4 font-bold ${item.amount >= 0 ? 'text-emerald-400' : 'text-amber-400'}">
+                ${item.amount >= 0 ? '+' : ''}$${item.amount.toFixed(2)}
+              </td>
+              <td class="py-3 px-4 text-gray-500">--</td>
+              <td class="py-3 px-4 text-gray-500">--</td>
+              <td class="py-3 px-4 text-xs text-gray-300">${item.note || '--'}</td>
+              <td class="py-3 px-4 text-right space-x-2">
+                <button onclick="window.editTransaction('${item.id}')" class="text-indigo-400 hover:text-indigo-300 font-medium text-xs">Edit</button>
+                <button onclick="window.deleteTransaction('${item.id}')" class="text-rose-400 hover:text-rose-300 text-xs font-medium">Delete</button>
+              </td>
+            </tr>
+          `;
+        }
+      }).join('');
+
+      // 2. RENDER MOBILE CARD STACK (Zero horizontal scrolling!)
+      mobileContainer.innerHTML = combined.map(item => {
+        if (item.entryType === 'session') {
+          const start = new Date(item.startTime);
+          const end = new Date(item.endTime);
+          const durationHrs = Math.max(0.1, (end - start) / 3600000);
+          const totalHands = (item.endHand && item.startHand) ? (item.endHand - item.startHand) : 0;
+          const profit = item.netProfit || 0;
+          const hourly = profit / durationHrs;
+          const per100 = totalHands > 0 ? (profit / totalHands) * 100 : 0;
+          
+          const isPLO = item.gameType && item.gameType.toLowerCase().includes('plo');
+          const gameIcon = isPLO ? '♣️' : '♠️';
+
+          return `
+            <div class="p-4 space-y-3 bg-gray-800/80 border-b border-gray-700">
+              <div class="flex justify-between items-start">
+                <div>
+                  <div class="font-bold text-gray-100 flex items-center space-x-1.5">
+                    <span>${gameIcon}</span>
+                    <span>${item.gameType}</span>
+                    <span class="text-xs text-gray-400 font-normal">(${item.stakes})</span>
+                  </div>
+                  <div class="text-xs text-gray-400 mt-0.5">
+                    ${formatPacificDate(item.startTime)} • ${formatPacificTime(item.startTime)}
+                  </div>
+                </div>
+                <div class="text-right">
+                  <div class="text-lg font-extrabold ${profit >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
+                    ${profit >= 0 ? '+' : ''}$${profit.toFixed(2)}
+                  </div>
+                  <div class="text-[11px] text-gray-400">
+                    $${(item.cashOut || 0).toFixed(2)} - $${(item.buyIn || 0).toFixed(2)}
+                  </div>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-3 gap-2 bg-gray-900/50 p-2.5 rounded-lg border border-gray-700/60 text-xs">
+                <div>
+                  <div class="text-gray-400 text-[10px]">DURATION</div>
+                  <div class="font-semibold text-gray-200">${durationHrs.toFixed(1)} hrs</div>
+                </div>
+                <div>
+                  <div class="text-gray-400 text-[10px]">HOURLY</div>
+                  <div class="font-semibold ${hourly >= 0 ? 'text-emerald-400' : 'text-rose-400'}">$${hourly.toFixed(2)}/hr</div>
+                </div>
+                <div>
+                  <div class="text-gray-400 text-[10px]">$/100 HANDS</div>
+                  <div class="font-semibold ${per100 >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${totalHands > 0 ? (per100 >= 0 ? '+' : '') + '$' + per100.toFixed(2) : '--'}</div>
+                </div>
+              </div>
+
+              <div class="flex justify-between items-center text-xs text-gray-300">
+                <div>
+                  <span class="text-gray-400">Hands:</span> 
+                  <span class="font-medium text-gray-200">${totalHands > 0 ? totalHands.toLocaleString() : '--'}</span>
+                  <span class="text-[10px] text-gray-400">(${item.startHand || 0}-${item.endHand || 0})</span>
+                </div>
+              </div>
+              ${item.notes ? `<div class="text-xs text-gray-400 italic bg-gray-900/30 p-2 rounded border border-gray-800">"${item.notes}"</div>` : ''}
+
+              <div class="flex justify-end space-x-3 pt-1 border-t border-gray-700/40">
+                <button onclick="window.editSession('${item.id}')" class="text-indigo-400 hover:text-indigo-300 font-medium text-xs px-2 py-1 bg-indigo-950/40 rounded border border-indigo-900/50">Edit Session</button>
+                <button onclick="window.deleteSession('${item.id}')" class="text-rose-400 hover:text-rose-300 font-medium text-xs px-2 py-1 bg-rose-950/40 rounded border border-rose-900/50">Delete</button>
+              </div>
+            </div>
+          `;
+        } else {
+          const isDeposit = item.type === 'deposit';
+          return `
+            <div class="p-4 space-y-2 bg-gray-850/40 border-b border-gray-700">
+              <div class="flex justify-between items-start">
+                <div class="font-semibold capitalize ${isDeposit ? 'text-emerald-400' : 'text-amber-400'} flex items-center space-x-1.5">
+                  <span>💳</span>
+                  <span>Bankroll ${item.type}</span>
+                </div>
+                <div class="text-base font-bold ${item.amount >= 0 ? 'text-emerald-400' : 'text-amber-400'}">
+                  ${item.amount >= 0 ? '+' : ''}$${item.amount.toFixed(2)}
+                </div>
+              </div>
+              <div class="text-xs text-gray-400">
+                ${formatPacificDate(item.timestamp)} • ${formatPacificTime(item.timestamp)}
+              </div>
+              ${item.note ? `<div class="text-xs text-gray-300 italic">${item.note}</div>` : ''}
+              <div class="flex justify-end space-x-3 pt-1">
+                <button onclick="window.editTransaction('${item.id}')" class="text-indigo-400 text-xs">Edit</button>
+                <button onclick="window.deleteTransaction('${item.id}')" class="text-rose-400 text-xs">Delete</button>
+              </div>
+            </div>
+          `;
+        }
+      }).join('');
+    }
+
+    function calculateOverallStats() {
+      let totalSessionProfit = 0;
+      let totalHours = 0;
+
+      loggedSessions.forEach(s => {
+        totalSessionProfit += (s.netProfit || 0);
+        const start = new Date(s.startTime);
+        const end = new Date(s.endTime);
+        totalHours += Math.max(0, (end - start) / 3600000);
+      });
+
+      let totalTxAdjustments = bankrollTransactions.reduce((acc, t) => acc + (t.amount || 0), 0);
+      let grandTotalBankroll = totalSessionProfit + totalTxAdjustments;
+
+      document.getElementById('statBankroll').textContent = `$${grandTotalBankroll.toFixed(2)}`;
+      document.getElementById('statNetProfit').textContent = `${totalSessionProfit >= 0 ? '+' : ''}$${totalSessionProfit.toFixed(2)}`;
+      document.getElementById('statNetProfit').className = `text-xl md:text-2xl font-bold ${totalSessionProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+      document.getElementById('statHours').textContent = `${totalHours.toFixed(1)} hrs`;
+
+      const overallHourly = totalHours > 0 ? (totalSessionProfit / totalHours) : 0;
+      document.getElementById('statHourly').textContent = `$${overallHourly.toFixed(2)}/hr`;
+      document.getElementById('statHourly').className = `text-xl md:text-2xl font-bold ${overallHourly >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+    }
+
+    window.editSession = (id) => {
+      const s = loggedSessions.find(item => item.id === id);
+      if (!s) return;
+      document.getElementById('editSessionId').value = s.id;
+      document.getElementById('editGameType').value = s.gameType;
+      document.getElementById('editStakes').value = s.stakes;
+      document.getElementById('editBuyIn').value = s.buyIn;
+      document.getElementById('editCashOut').value = s.cashOut || 0;
+      document.getElementById('editStartHand').value = s.startHand;
+      document.getElementById('editEndHand').value = s.endHand || s.startHand;
+      document.getElementById('editStartTime').value = isoToPacificLocalInput(s.startTime);
+      document.getElementById('editEndTime').value = isoToPacificLocalInput(s.endTime);
+      document.getElementById('editNotes').value = s.notes || "";
+      document.getElementById('editModal').classList.remove('hidden');
+    };
+
+    window.editTransaction = (id) => {
+      const t = bankrollTransactions.find(item => item.id === id);
+      if (!t) return;
+      document.getElementById('editTxId').value = t.id;
+      document.getElementById('editTxType').value = t.type;
+      document.getElementById('editTxAmount').value = Math.abs(t.amount);
+      document.getElementById('editTxTimestamp').value = isoToPacificLocalInput(t.timestamp);
+      document.getElementById('editTxNote').value = t.note || "";
+      document.getElementById('editTxModal').classList.remove('hidden');
+    };
+
+    window.deleteSession = async (id) => {
+      if (confirm("Are you sure you want to delete this session entry permanently?")) {
+        const fb = window.FirebaseServices;
+        await fb.deleteDoc(fb.doc(fb.db, 'sessions', id));
+      }
+    };
+
+    window.deleteTransaction = async (id) => {
+      if (confirm("Are you sure you want to delete this bankroll deposit/withdrawal record?")) {
+        const fb = window.FirebaseServices;
+        await fb.deleteDoc(fb.doc(fb.db, 'transactions', id));
+      }
+    };
+
+    function exportToCSV() {
+      if (loggedSessions.length === 0) {
+        alert("No session data available to export.");
+        return;
+      }
+      let csv = "Date (PT),Game,Stakes,Start Time (PT),End Time (PT),Hours,Start Hand,End Hand,Total Hands,Net Profit,$/100 Hands,Notes\n";
+      loggedSessions.forEach(s => {
+        const start = new Date(s.startTime);
+        const end = new Date(s.endTime);
+        const hrs = ((end - start) / 3600000).toFixed(2);
+        const hands = (s.endHand && s.startHand) ? (s.endHand - s.startHand) : 0;
+        const profit = s.netProfit || 0;
+        const per100 = hands > 0 ? (profit / hands) * 100 : 0;
+        const cleanNotes = (s.notes || "").replace(/"/g, '""');
+        csv += `"${formatPacificDate(s.startTime)}","${s.gameType}","${s.stakes}","${formatPacificTime(s.startTime)}","${formatPacificTime(s.endTime)}",${hrs},${s.startHand},${s.endHand || ''},${hands},${profit},${per100.toFixed(2)},"${cleanNotes}"\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `poker_bankroll_export_${new Date().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  </script>
+</body>
+</html>
