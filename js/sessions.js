@@ -80,7 +80,7 @@ export function initSessionModals(currentUser, loggedSessions, getActiveSession)
 
     const fb = window.FirebaseServices;
     const sessionData = {
-      userId: currentUser.uid,
+      userId: currentUser().uid, // <-- Added the parentheses () here!
       gameType: document.getElementById('startGameType').value,
       stakes: document.getElementById('startStakes').value,
       buyIn: parseFloat(document.getElementById('startBuyIn').value),
