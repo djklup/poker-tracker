@@ -19,7 +19,7 @@ export function initTransactions(currentUser) {
     const timestampISO = (isOverride && overrideTime) ? pacificInputToISO(overrideTime) : new Date().toISOString();
 
     await fb.addDoc(fb.collection(fb.db, 'transactions'), {
-      userId: currentUser.uid,
+      userId: currentUser().uid,
       type: txType,
       amount: txType === 'deposit' ? amount : -amount,
       note: document.getElementById('txNote').value || "",
