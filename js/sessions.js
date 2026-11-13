@@ -1,12 +1,14 @@
 import { formatPacificTime, pacificInputToISO, getCurrentPacificInputString } from './utils.js';
 
 let timerInterval = null;
+let notificationFired = false; // Tracks if the break reminder has already been sent for this session
 
 export function renderActiveSessionBar(activeSession) {
   const bar = document.getElementById('activeSessionBar');
   if (!activeSession) {
     bar.classList.add('hidden');
     if (timerInterval) clearInterval(timerInterval);
+    notificationFired = false; // Reset when session ends
     return;
   }
   bar.classList.remove('hidden');
@@ -16,15 +18,36 @@ export function renderActiveSessionBar(activeSession) {
   document.getElementById('activeStartTime').textContent = formatPacificTime(activeSession.startTime);
   document.getElementById('activeStartHand').textContent = activeSession.startHand.toLocaleString();
 
+  // Request notification permission when an active session is loaded/started
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+
   if (timerInterval) clearInterval(timerInterval);
+  
   const updateTimer = () => {
     const diffMs = new Date() - new Date(activeSession.startTime);
     const hrs = Math.floor(diffMs / 3600000);
     const mins = Math.floor((diffMs % 3600000) / 60000);
     const secs = Math.floor((diffMs % 60000) / 1000);
+    
     document.getElementById('activeTimer').textContent = 
       `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+    // TESTING THRESHOLD: 1 minute (60,000 ms). Change to 3600000 for 1 hour in production.
+    const targetThresholdMs = 60 * 1000; 
+
+    if (!notificationFired && diffMs >= targetThresholdMs) {
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('Poker Break Reminder 🚨', {
+          body: 'You have been playing continuously. Take a quick break to stretch and clear your mind!',
+          icon: 'apple-touch-icon.png'
+        });
+        notificationFired = true;
+      }
+    }
   };
+
   updateTimer();
   timerInterval = setInterval(updateTimer, 1000);
 }
