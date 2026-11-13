@@ -83,6 +83,28 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('startOverrideContainer').classList.add('hidden');
     document.getElementById('startTimeOverride').value = '';
     populateDropdowns(loggedSessions);
+
+    // Extract the exact value displayed in the Current Wallet dashboard card
+    const statBankrollElem = document.getElementById('statBankroll');
+    if (statBankrollElem) {
+      const bankrollText = statBankrollElem.textContent.replace('$', '').trim();
+      const parsedBankroll = parseFloat(bankrollText);
+      if (!isNaN(parsedBankroll)) {
+        document.getElementById('startBuyIn').value = parsedBankroll.toFixed(2);
+      }
+    }
+
+    if (loggedSessions.length > 0) {
+      const lastSession = loggedSessions[0];
+      if (lastSession.endHand) {
+        document.getElementById('startHandNum').value = lastSession.endHand;
+        const handNote = document.getElementById('handPreviousNote');
+        if (handNote) {
+          handNote.textContent = `✓ Auto-filled from last session's end hand (#${lastSession.endHand.toLocaleString()}). Please verify.`;
+          handNote.classList.remove('hidden');
+        }
+      }
+    }
     document.getElementById('startModal').classList.remove('hidden');
   });
 
