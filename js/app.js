@@ -10,7 +10,7 @@ let activeSession = null;
 let loggedSessions = [];
 let bankrollTransactions = [];
 
-const APP_VERSION = "v0.43"; 
+const APP_VERSION = "v0.71"; 
 document.getElementById('appVersionDisplay').textContent = APP_VERSION;
 
 document.addEventListener('DOMContentLoaded', () => {
