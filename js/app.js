@@ -92,6 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('endSessionBtn').addEventListener('click', () => document.getElementById('endModal').classList.remove('hidden'));
   document.getElementById('closeEndModal').addEventListener('click', () => document.getElementById('endModal').classList.add('hidden'));
   document.getElementById('dismissSummaryBtn').addEventListener('click', () => document.getElementById('endModal').classList.add('hidden'));
+  document.getElementById('closeEditModal').addEventListener('click', () => document.getElementById('editModal').classList.add('hidden'));
 });
 
 function attachFirestoreListeners() {
@@ -138,6 +139,50 @@ window.editSession = (id) => {
   document.getElementById('editNotes').value = s.notes || "";
   document.getElementById('editModal').classList.remove('hidden');
 };
+
+document.getElementById('editSessionForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const sessionId = document.getElementById('editSessionId').value;
+  if (!sessionId) return;
+
+  const startHand = parseInt(document.getElementById('editStartHand').value, 10);
+  const endHand = parseInt(document.getElementById('editEndHand').value, 10);
+  const startTimeISO = pacificInputToISO(document.getElementById('editStartTime').value);
+  const endTimeISO = pacificInputToISO(document.getElementById('editEndTime').value);
+
+  const buyIn = parseFloat(document.getElementById('editBuyIn').value);
+  const cashOut = parseFloat(document.getElementById('editCashOut').value);
+  const netProfit = cashOut - buyIn;
+
+  const startDt = new Date(startTimeISO);
+  const endDt = new Date(endTimeISO);
+  const durationHrs = Math.max(0.1, (endDt - startDt) / 3600000);
+  const totalHandsPlayed = endHand - startHand;
+  const hourlyRate = netProfit / durationHrs;
+  const per100Rate = totalHandsPlayed > 0 ? (netProfit / totalHandsPlayed) * 100 : 0;
+
+  try {
+    const fb = window.FirebaseServices;
+    const sessionRef = fb.doc(fb.db, 'sessions', sessionId);
+    await fb.updateDoc(sessionRef, {
+      gameType: document.getElementById('editGameType').value,
+      stakes: document.getElementById('editStakes').value,
+      buyIn: buyIn,
+      cashOut: cashOut,
+      netProfit: netProfit,
+      startHand: startHand,
+      endHand: endHand,
+      startTime: startTimeISO,
+      endTime: endTimeISO,
+      notes: document.getElementById('editNotes').value || ""
+    });
+
+    document.getElementById('editModal').classList.add('hidden');
+  } catch (err) {
+    console.error("Error updating logged session: ", err);
+    alert("Failed to update session.");
+  }
+});
 
 document.getElementById('editActiveForm').addEventListener('submit', async (e) => {
   e.preventDefault();
