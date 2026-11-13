@@ -53,6 +53,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('exportCsvBtn').addEventListener('click', () => exportToCSV(loggedSessions));
 
+  //Edit Active button
+  document.getElementById('editActiveSessionBtn').addEventListener('click', () => {
+    if (!activeSession) {
+      alert("No active session found to edit.");
+      return;
+    }
+    // Populate the active edit form fields
+    document.getElementById('editActiveGameType').value = activeSession.gameType;
+    document.getElementById('editActiveStakes').value = activeSession.stakes;
+    document.getElementById('editActiveBuyIn').value = activeSession.buyIn;
+    document.getElementById('editActiveStartHand').value = activeSession.startHand;
+    
+    // Show the modal
+    document.getElementById('editActiveModal').classList.remove('hidden');
+  });
+
+  document.getElementById('closeEditActiveModal').addEventListener('click', () => {
+    document.getElementById('editActiveModal').classList.add('hidden');
+  });
+
   // Global actions for modals
   document.getElementById('startSessionBtn').addEventListener('click', () => {
     if (activeSession) {
@@ -118,6 +138,27 @@ window.editSession = (id) => {
   document.getElementById('editNotes').value = s.notes || "";
   document.getElementById('editModal').classList.remove('hidden');
 };
+
+document.getElementById('editActiveForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!activeSession) return;
+
+  const fb = window.FirebaseServices;
+  const updatedData = {
+    gameType: document.getElementById('editActiveGameType').value,
+    stakes: document.getElementById('editActiveStakes').value,
+    buyIn: parseFloat(document.getElementById('editActiveBuyIn').value),
+    startHand: parseInt(document.getElementById('editActiveStartHand').value, 10)
+  };
+
+  try {
+    await fb.updateDoc(fb.doc(fb.db, 'sessions', activeSession.id), updatedData);
+    document.getElementById('editActiveModal').classList.add('hidden');
+  } catch (err) {
+    console.error("Error updating active session: ", err);
+    alert("Failed to update active session.");
+  }
+});
 
 window.editTransaction = (id) => {
   const t = bankrollTransactions.find(item => item.id === id);
