@@ -233,7 +233,36 @@ function calculateOverallStats(filteredSessions, filteredTx, loggedSessions, ban
 
   let allTxAdjustments = bankrollTransactions.reduce((acc, t) => acc + (t.amount || 0), 0);
   let allSessionProfit = loggedSessions.reduce((acc, s) => acc + (s.netProfit || 0), 0);
-  let grandTotalBankroll = allSessionProfit + allTxAdjustments;
+  //old method
+  //let grandTotalBankroll = allSessionProfit + allTxAdjustments;
+  //new method
+  let sortedSessions = [...loggedSessions].sort((a, b) => {
+    const timeA = new Date(a.endTime || a.startTime || a.date || 0).getTime();
+    const timeB = new Date(b.endTime || b.startTime || b.date || 0).getTime();
+    return timeB - timeA;
+  });
+  
+  let latestSession = sortedSessions[0];
+  let latestEndingBankroll = latestSession
+    ? Number(latestSession.endingBankroll ?? 0)
+    : 0;
+  let latestSessionTime = latestSession
+    ? new Date(latestSession.endTime || latestSession.startTime || latestSession.date || 0).getTime()
+    : 0;
+  
+  // Only apply deposits (+ amount) or withdrawals (- amount) logged AFTER the latest session
+  let postSessionTxAdjustments = bankrollTransactions
+    .filter((t) => new Date(t.date || t.timestamp || t.createdAt || 0).getTime() > latestSessionTime)
+    .reduce((acc, t) => acc + (t.amount || 0), 0);
+  
+  let grandTotalBankroll = latestEndingBankroll + postSessionTxAdjustments;
+ 
+  // Only include deposits/withdrawals that occurred after the latest session
+  let recentTxAdjustments = bankrollTransactions
+    .filter((t) => new Date(t.date || t.timestamp || t.createdAt || 0).getTime() > latestSessionTime)
+    .reduce((acc, t) => acc + (t.amount || 0), 0);
+  
+  let grandTotalBankroll = latestEndingBankroll + recentTxAdjustments;
 
   document.getElementById('statBankroll').textContent = `$${grandTotalBankroll.toFixed(2)}`;
   document.getElementById('statNetProfit').textContent = `${totalSessionProfit >= 0 ? '+' : ''}$${totalSessionProfit.toFixed(2)}`;
