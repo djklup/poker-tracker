@@ -256,13 +256,6 @@ function calculateOverallStats(filteredSessions, filteredTx, loggedSessions, ban
     .reduce((acc, t) => acc + (t.amount || 0), 0);
   
   let grandTotalBankroll = latestEndingBankroll + postSessionTxAdjustments;
- 
-  // Only include deposits/withdrawals that occurred after the latest session
-  let recentTxAdjustments = bankrollTransactions
-    .filter((t) => new Date(t.date || t.timestamp || t.createdAt || 0).getTime() > latestSessionTime)
-    .reduce((acc, t) => acc + (t.amount || 0), 0);
-  
-  let grandTotalBankroll = latestEndingBankroll + recentTxAdjustments;
 
   document.getElementById('statBankroll').textContent = `$${grandTotalBankroll.toFixed(2)}`;
   document.getElementById('statNetProfit').textContent = `${totalSessionProfit >= 0 ? '+' : ''}$${totalSessionProfit.toFixed(2)}`;
