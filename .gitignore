@@ -1,4 +1,7 @@
+node_modules/
+functions/node_modules/
+.firebase/
+.env
 .DS_Store
-.DS_Store
-combined_code.txt
-.gitignore
+firebase-debug.log
+functions/.runtimeconfig.json

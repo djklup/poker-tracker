@@ -4,6 +4,7 @@ import { renderActiveSessionBar, initSessionModals } from './sessions.js';
 import { initTransactions } from './transactions.js';
 import { renderDashboardData, exportToCSV } from './dashboard.js';
 import { populateDropdowns, isoToPacificLocalInput, pacificInputToISO } from './utils.js';
+import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 let currentUser = null;
 let activeSession = null;
@@ -13,6 +14,44 @@ let bankrollTransactions = [];
 const APP_VERSION = "v0.74"; 
 document.getElementById('appVersionDisplay').textContent = APP_VERSION;
 
+// Helper to convert your Base64 VAPID public key for the browser
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
+async function subscribeUserToPush(userId) {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+
+  try {
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') return;
+
+    const registration = await navigator.serviceWorker.ready;
+    let subscription = await registration.pushManager.getSubscription();
+
+    if (!subscription) {
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array('BD4xw6VOV5R0_eQU2l_1WU3v5r22gAXssoSEGiyEQYe5z-HuzThi7v4WFlb2m95BbTlhMqVakLXnCFcNSTfYkfQ')
+      });
+    }
+
+    // Store the subscription object in Firestore so the Cloud Function can read it
+    await setDoc(doc(db, 'users', userId), {
+      pushSubscription: JSON.parse(JSON.stringify(subscription))
+    }, { merge: true });
+
+  } catch (err) {
+    console.error('Push subscription failed:', err);
+  }
+}
 document.addEventListener('DOMContentLoaded', () => {
   initAuth((user) => {
     currentUser = user;
@@ -33,6 +72,17 @@ document.addEventListener('DOMContentLoaded', () => {
       bankrollTransactions = [];
     }
   });
+
+  // Register the service worker safely upon startup
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js')
+      .then((registration) => {
+        console.log('Service worker registration successful with scope: ', registration.scope);
+      })
+      .catch((error) => {
+        console.error('Service worker registration failed: ', error);
+      });
+  }
 
   populateDropdowns(loggedSessions);
   initSessionModals(() => currentUser, loggedSessions, () => activeSession);
@@ -75,6 +125,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Global actions for modals
   document.getElementById('startSessionBtn').addEventListener('click', () => {
+    
+    subscribeUserToPush();
+
     if (activeSession) {
       alert("You already have an active session in progress!");
       return;
