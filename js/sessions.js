@@ -154,15 +154,30 @@ export function initSessionModals(currentUser, loggedSessions, getActiveSession)
 
     try {
       const fb = window.FirebaseServices;
-      const sessionRef = fb.doc(fb.db, 'sessions', activeSession.id);
-      await fb.updateDoc(sessionRef, {
+      const userId = currentUser().uid;
+
+      // 1. Remove the active session from the user's dedicated subcollection
+      const activeRef = fb.doc(fb.db, 'users', userId, 'activeSessions', activeSession.id);
+      await fb.deleteDoc(activeRef);
+
+      // 2. Add the finalized session into the top-level completed sessions collection
+      const completedSessionData = {
+        userId: userId,
         status: 'completed',
+        gameType: gameType,
+        stakes: stakes,
+        buyIn: buyIn,
         cashOut: cashOut,
         netProfit: netProfit,
+        startHand: startHand,
         endHand: endHand,
+        startTime: activeSession.startTime,
         endTime: endTimeISO,
-        notes: document.getElementById('endNotes').value || ""
-      });
+        notes: document.getElementById('endNotes').value || "",
+        createdAt: fb.serverTimestamp()
+      };
+
+      await fb.addDoc(fb.collection(fb.db, 'sessions'), completedSessionData);
 
       document.getElementById('summaryGameTitle').textContent = `${gameType} (${stakes})`;
       
