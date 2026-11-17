@@ -102,18 +102,23 @@ export function initSessionModals(currentUser, loggedSessions, getActiveSession)
     const startTimeISO = (isOverride && overrideTime) ? pacificInputToISO(overrideTime) : new Date().toISOString();
 
     const fb = window.FirebaseServices;
+    const userId = currentUser().uid;
+
     const sessionData = {
-      userId: currentUser().uid, // <-- Added the parentheses () here!
+      userId: userId,
       gameType: document.getElementById('startGameType').value,
       stakes: document.getElementById('startStakes').value,
       buyIn: parseFloat(document.getElementById('startBuyIn').value),
       startHand: startHand,
       startTime: startTimeISO,
       status: 'active',
+      breakNotified: false,
       createdAt: fb.serverTimestamp()
     };
 
-    await fb.addDoc(fb.collection(fb.db, 'sessions'), sessionData);
+    // Save as a subcollection under users/{userId}/activeSessions
+    await fb.addDoc(fb.collection(fb.db, 'users', userId, 'activeSessions'), sessionData);
+    
     document.getElementById('startModal').classList.add('hidden');
     document.getElementById('startSessionForm').reset();
   });
