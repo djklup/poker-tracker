@@ -39,7 +39,7 @@ async function subscribeUserToPush(userId) {
     if (!subscription) {
       subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array('BD4xw6VOV5R0_eQU2l_1WU3v5r22gAXssoSEGiyEQYe5z-HuzThi7v4WFlb2m95BbTlhMqVakLXnCFcNSTfYkfQ')
+        applicationServerKey: urlBase64ToUint8Array('BCwEg_e7sfaT0oEGIkJwS2MRG3RbLwYGdHKTNI3bdpan5ZoR8G2UFm_C1Iy0JpWtdjKGywcKknQMYtDjPaS2Hks')
       });
     }
 
@@ -52,6 +52,7 @@ async function subscribeUserToPush(userId) {
     console.error('Push subscription failed:', err);
   }
 }
+
 document.addEventListener('DOMContentLoaded', () => {
   initAuth((user) => {
     currentUser = user;
@@ -172,21 +173,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function attachFirestoreListeners() {
   const fb = window.FirebaseServices;
+
+  // Listen to completed/logged sessions from the top-level sessions collection
   const qSessions = fb.query(fb.collection(fb.db, 'sessions'), fb.orderBy('startTime', 'desc'));
   fb.onSnapshot(qSessions, (snapshot) => {
     loggedSessions = [];
-    activeSession = null;
     snapshot.docs.forEach(docSnap => {
       const data = { id: docSnap.id, ...docSnap.data() };
-      if (data.userId === currentUser.uid) {
-        if (data.status === 'active') activeSession = data;
-        else loggedSessions.push(data);
+      if (data.userId === currentUser.uid && data.status !== 'active') {
+        loggedSessions.push(data);
       }
     });
-    renderActiveSessionBar(activeSession);
     renderDashboardData(loggedSessions, bankrollTransactions);
   });
 
+  // Listen to active sessions from the user's dedicated subcollection
+  const qActive = fb.query(fb.collection(fb.db, 'users', currentUser.uid, 'activeSessions'));
+  fb.onSnapshot(qActive, (snapshot) => {
+    activeSession = null;
+    snapshot.docs.forEach(docSnap => {
+      const data = { id: docSnap.id, ...docSnap.data() };
+      activeSession = data;
+    });
+    renderActiveSessionBar(activeSession);
+  });
+
+  // Listen to bankroll transactions
   const qTx = fb.query(fb.collection(fb.db, 'transactions'), fb.orderBy('timestamp', 'desc'));
   fb.onSnapshot(qTx, (snapshot) => {
     bankrollTransactions = [];
@@ -197,23 +209,6 @@ function attachFirestoreListeners() {
     renderDashboardData(loggedSessions, bankrollTransactions);
   });
 }
-
-// Global window assignments for table edit/delete triggers
-window.editSession = (id) => {
-  const s = loggedSessions.find(item => item.id === id);
-  if (!s) return;
-  document.getElementById('editSessionId').value = s.id;
-  document.getElementById('editGameType').value = s.gameType;
-  document.getElementById('editStakes').value = s.stakes;
-  document.getElementById('editBuyIn').value = s.buyIn;
-  document.getElementById('editCashOut').value = s.cashOut || 0;
-  document.getElementById('editStartHand').value = s.startHand;
-  document.getElementById('editEndHand').value = s.endHand || s.startHand;
-  document.getElementById('editStartTime').value = isoToPacificLocalInput(s.startTime);
-  document.getElementById('editEndTime').value = isoToPacificLocalInput(s.endTime);
-  document.getElementById('editNotes').value = s.notes || "";
-  document.getElementById('editModal').classList.remove('hidden');
-};
 
 document.getElementById('editSessionForm').addEventListener('submit', async (e) => {
   e.preventDefault();
