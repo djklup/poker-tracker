@@ -173,7 +173,6 @@ export function initSessionModals(currentUser, loggedSessions, getActiveSession)
         endHand: endHand,
         startTime: activeSession.startTime,
         endTime: endTimeISO,
-        endingBankroll: cashOut
         notes: document.getElementById('endNotes').value || "",
         createdAt: fb.serverTimestamp()
       };
