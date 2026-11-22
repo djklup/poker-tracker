@@ -175,7 +175,11 @@ function attachFirestoreListeners() {
   const fb = window.FirebaseServices;
 
   // Listen to completed/logged sessions from the top-level sessions collection
-  const qSessions = fb.query(fb.collection(fb.db, 'sessions'), fb.orderBy('startTime', 'desc'));
+  const qSessions = fb.query(
+    fb.collection(fb.db, 'sessions'),
+    fb.where('userId', '==', currentUser.uid),
+    fb.orderBy('startTime', 'desc')
+  );
   fb.onSnapshot(qSessions, (snapshot) => {
     loggedSessions = [];
     snapshot.docs.forEach(docSnap => {
@@ -199,7 +203,11 @@ function attachFirestoreListeners() {
   });
 
   // Listen to bankroll transactions
-  const qTx = fb.query(fb.collection(fb.db, 'transactions'), fb.orderBy('timestamp', 'desc'));
+  const qTx = fb.query(
+    fb.collection(fb.db, 'transactions'),
+    fb.where('userId', '==', currentUser.uid),
+    fb.orderBy('timestamp', 'desc')
+  );
   fb.onSnapshot(qTx, (snapshot) => {
     bankrollTransactions = [];
     snapshot.docs.forEach(docSnap => {
