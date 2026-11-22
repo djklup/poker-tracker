@@ -300,6 +300,24 @@ window.editTransaction = (id) => {
   document.getElementById('editTxModal').classList.remove('hidden');
 };
 
+window.editSession = (id) => {
+  const s = loggedSessions.find(item => item.id === id);
+  if (!s) return;
+
+  document.getElementById('editSessionId').value = s.id;
+  document.getElementById('editGameType').value = s.gameType || '';
+  document.getElementById('editStakes').value = s.stakes || '';
+  document.getElementById('editBuyIn').value = s.buyIn ?? '';
+  document.getElementById('editCashOut').value = s.cashOut ?? '';
+  document.getElementById('editStartHand').value = s.startHand ?? '';
+  document.getElementById('editEndHand').value = s.endHand ?? '';
+  document.getElementById('editStartTime').value = s.startTime ? isoToPacificLocalInput(s.startTime) : '';
+  document.getElementById('editEndTime').value = s.endTime ? isoToPacificLocalInput(s.endTime) : '';
+  document.getElementById('editNotes').value = s.notes || '';
+
+  document.getElementById('editModal').classList.remove('hidden');
+};
+
 window.deleteSession = async (id) => {
   if (confirm("Are you sure you want to delete this session entry permanently?")) {
     const fb = window.FirebaseServices;
