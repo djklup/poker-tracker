@@ -23,15 +23,20 @@ export function initAuth(onAuthStateChangedCallback) {
     };
   }
 
-  logoutBtn.onclick = () => {
-    const fb = window.FirebaseServices;
-    if (fb) fb.signOut(fb.auth);
-  };
+  if (logoutBtn) {
+    logoutBtn.onclick = () => {
+      const fb = window.FirebaseServices;
+      if (fb) fb.signOut(fb.auth);
+    };
+  }
 
   const fb = window.FirebaseServices;
   if (fb && fb.auth) {
     fb.onAuthStateChanged(fb.auth, (user) => {
+      if (loginBtn) {
+        loginBtn.disabled = Boolean(user);
+        loginBtn.textContent = user ? "Signed in" : "Sign in with Google";
+      }
       onAuthStateChangedCallback(user);
     });
   }
-}
