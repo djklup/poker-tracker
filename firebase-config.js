@@ -10,7 +10,6 @@ import {
   signOut, 
   onAuthStateChanged 
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-// In firebase-config.js:
 import {
   getFirestore,
   collection,
@@ -58,6 +57,7 @@ window.FirebaseServices = {
   deleteDoc,
   onSnapshot,
   query,
+  where,
   orderBy,
   serverTimestamp
 };
