@@ -189,7 +189,9 @@ function attachFirestoreListeners() {
       }
     });
     renderDashboardData(loggedSessions, bankrollTransactions);
-  });
+  },
+  (err) => console.error("Error listening to sessions:", err)
+  );
 
   // Listen to active sessions from the user's dedicated subcollection
   const qActive = fb.query(fb.collection(fb.db, 'users', currentUser.uid, 'activeSessions'));
@@ -200,7 +202,9 @@ function attachFirestoreListeners() {
       activeSession = data;
     });
     renderActiveSessionBar(activeSession);
-  });
+  },
+  (err) => console.error("Error listening to sessions:", err)
+  );
 
   // Listen to bankroll transactions
   const qTx = fb.query(
@@ -215,7 +219,9 @@ function attachFirestoreListeners() {
       if (data.userId === currentUser.uid) bankrollTransactions.push(data);
     });
     renderDashboardData(loggedSessions, bankrollTransactions);
-  });
+  },
+  (err) => console.error("Error listening to sessions:", err)
+  );
 }
 
 document.getElementById('editSessionForm').addEventListener('submit', async (e) => {
