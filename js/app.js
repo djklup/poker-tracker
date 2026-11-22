@@ -11,7 +11,7 @@ let activeSession = null;
 let loggedSessions = [];
 let bankrollTransactions = [];
 
-const APP_VERSION = "v0.92"; 
+const APP_VERSION = "v0.94"; 
 document.getElementById('appVersionDisplay').textContent = APP_VERSION;
 
 // Helper to convert your Base64 VAPID public key for the browser
