@@ -40,3 +40,4 @@ export function initAuth(onAuthStateChangedCallback) {
       onAuthStateChangedCallback(user);
     });
   }
+}
