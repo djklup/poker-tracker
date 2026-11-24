@@ -45,13 +45,52 @@ export function isoToPacificLocalInput(isoString) {
 
 export function pacificInputToISO(localDateTimeString) {
   if (!localDateTimeString) return new Date().toISOString();
-  const tempDate = new Date(localDateTimeString);
-  const jan = new Date(tempDate.getFullYear(), 0, 1);
-  const jul = new Date(tempDate.getFullYear(), 6, 1);
-  const stdOffset = Math.max(jan.getTimezoneOffset(), jul.getTimezoneOffset());
-  const isDST = tempDate.getTimezoneOffset() < stdOffset;
-  const offset = isDST ? '-07:00' : '-08:00';
-  return `${localDateTimeString}:00${offset}`;
+  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(localDateTimeString);
+  if (!match) return new Date(localDateTimeString).toISOString();
+
+  const targetWallTime = Date.UTC(
+    Number(match[1]), Number(match[2]) - 1, Number(match[3]),
+    Number(match[4]), Number(match[5]), Number(match[6] || 0)
+  );
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: PACIFIC_TZ,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hourCycle: 'h23'
+  });
+  const wallTimeAt = (timestamp) => {
+    const parts = Object.fromEntries(formatter.formatToParts(new Date(timestamp)).map(part => [part.type, part.value]));
+    return Date.UTC(
+      Number(parts.year), Number(parts.month) - 1, Number(parts.day),
+      Number(parts.hour), Number(parts.minute), Number(parts.second)
+    );
+  };
+
+  const offsets = new Set();
+  [-36, -24, -12, 0, 12, 24, 36].forEach(hours => {
+    const sample = targetWallTime + hours * 3600000;
+    offsets.add(wallTimeAt(sample) - sample);
+  });
+
+  const candidates = [...offsets].map(offset => {
+    const timestamp = targetWallTime - offset;
+    return { timestamp, wallTime: wallTimeAt(timestamp) };
+  });
+  const exactMatches = candidates
+    .filter(candidate => candidate.wallTime === targetWallTime)
+    .sort((a, b) => a.timestamp - b.timestamp);
+  if (exactMatches.length) return new Date(exactMatches[0].timestamp).toISOString();
+
+  const nextValidTime = candidates
+    .filter(candidate => candidate.wallTime > targetWallTime)
+    .sort((a, b) => a.wallTime - b.wallTime)[0];
+  if (nextValidTime) return new Date(nextValidTime.timestamp).toISOString();
+
+  return new Date(candidates[0].timestamp).toISOString();
 }
 
 export function populateDropdowns(loggedSessions) {

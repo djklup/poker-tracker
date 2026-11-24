@@ -205,6 +205,10 @@ document.getElementById('editSessionForm').addEventListener('submit', async (e) 
   const endHand = parseInt(document.getElementById('editEndHand').value, 10);
   const startTimeISO = pacificInputToISO(document.getElementById('editStartTime').value);
   const endTimeISO = pacificInputToISO(document.getElementById('editEndTime').value);
+  if (new Date(endTimeISO) <= new Date(startTimeISO)) {
+    alert('End time must be after start time.');
+    return;
+  }
 
   const buyIn = parseFloat(document.getElementById('editBuyIn').value);
   const cashOut = parseFloat(document.getElementById('editCashOut').value);
@@ -253,7 +257,10 @@ document.getElementById('editActiveForm').addEventListener('submit', async (e) =
   };
 
   try {
-    await fb.updateDoc(fb.doc(fb.db, 'sessions', activeSession.id), updatedData);
+    await fb.updateDoc(
+      fb.doc(fb.db, 'users', currentUser.uid, 'activeSessions', activeSession.id),
+      updatedData
+    );
     document.getElementById('editActiveModal').classList.add('hidden');
   } catch (err) {
     console.error("Error updating active session: ", err);

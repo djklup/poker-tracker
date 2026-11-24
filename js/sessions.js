@@ -117,6 +117,10 @@ export function initSessionModals(currentUser, loggedSessions, getActiveSession)
     const isOverride = document.getElementById('toggleEndOverride').checked;
     const overrideTime = document.getElementById('endTimeOverride').value;
     const endTimeISO = (isOverride && overrideTime) ? pacificInputToISO(overrideTime) : new Date().toISOString();
+    if (new Date(endTimeISO) <= new Date(activeSession.startTime)) {
+      alert('End time must be after start time.');
+      return;
+    }
     
     const cashOut = parseFloat(document.getElementById('endCashOut').value);
     const buyIn = activeSession.buyIn;
@@ -136,11 +140,8 @@ export function initSessionModals(currentUser, loggedSessions, getActiveSession)
       const fb = window.FirebaseServices;
       const userId = currentUser().uid;
 
-      // 1. Remove the active session from the user's dedicated subcollection
+      // Move the active session to the completed sessions collection atomically.
       const activeRef = fb.doc(fb.db, 'users', userId, 'activeSessions', activeSession.id);
-      await fb.deleteDoc(activeRef);
-
-      // 2. Add the finalized session into the top-level completed sessions collection
       const completedSessionData = {
         userId: userId,
         status: 'completed',
@@ -157,7 +158,11 @@ export function initSessionModals(currentUser, loggedSessions, getActiveSession)
         createdAt: fb.serverTimestamp()
       };
 
-      await fb.addDoc(fb.collection(fb.db, 'sessions'), completedSessionData);
+      const completedSessionRef = fb.doc(fb.collection(fb.db, 'sessions'));
+      const batch = fb.writeBatch(fb.db);
+      batch.delete(activeRef);
+      batch.set(completedSessionRef, completedSessionData);
+      await batch.commit();
 
       document.getElementById('summaryGameTitle').textContent = `${gameType} (${stakes})`;
       
