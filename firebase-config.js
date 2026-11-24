@@ -21,7 +21,8 @@ import {
   query,
   where,
   orderBy,
-  serverTimestamp
+  serverTimestamp,
+  writeBatch
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // Add `where` inside window.FirebaseServices = { ... }
@@ -59,7 +60,8 @@ window.FirebaseServices = {
   query,
   where,
   orderBy,
-  serverTimestamp
+  serverTimestamp,
+  writeBatch
 };
 
 // Flag that it's loaded

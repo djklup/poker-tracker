@@ -30,4 +30,33 @@ export function initTransactions(currentUser) {
     document.getElementById('txModal').classList.add('hidden');
     document.getElementById('txForm').reset();
   });
+
+  document.getElementById('editTxForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fb = window.FirebaseServices;
+    const txId = document.getElementById('editTxId').value;
+    if (!txId) return;
+
+    const type = document.getElementById('editTxType').value;
+    const amount = Math.abs(parseFloat(document.getElementById('editTxAmount').value));
+
+    try {
+      await fb.updateDoc(fb.doc(fb.db, 'transactions', txId), {
+        type,
+        amount: type === 'deposit' ? amount : -amount,
+        timestamp: pacificInputToISO(document.getElementById('editTxTimestamp').value),
+        note: document.getElementById('editTxNote').value || ""
+      });
+
+      document.getElementById('editTxModal').classList.add('hidden');
+      document.getElementById('editTxForm').reset();
+    } catch (err) {
+      console.error('Error updating transaction:', err);
+      alert('Failed to update transaction.');
+    }
+  });
+
+  document.getElementById('closeEditTxModal').addEventListener('click', () => {
+    document.getElementById('editTxModal').classList.add('hidden');
+  });
 }

@@ -1,14 +1,12 @@
 import { formatPacificTime, pacificInputToISO, getCurrentPacificInputString } from './utils.js';
 
 let timerInterval = null;
-let notificationFired = false; // Tracks if the break reminder has already been sent for this session
 
 export function renderActiveSessionBar(activeSession) {
   const bar = document.getElementById('activeSessionBar');
   if (!activeSession) {
     bar.classList.add('hidden');
     if (timerInterval) clearInterval(timerInterval);
-    notificationFired = false; // Reset when session ends
     return;
   }
   bar.classList.remove('hidden');
@@ -17,11 +15,6 @@ export function renderActiveSessionBar(activeSession) {
   document.getElementById('activeBuyIn').textContent = `$${activeSession.buyIn.toFixed(2)}`;
   document.getElementById('activeStartTime').textContent = formatPacificTime(activeSession.startTime);
   document.getElementById('activeStartHand').textContent = activeSession.startHand.toLocaleString();
-
-  // Request notification permission when an active session is loaded/started
-  if ('Notification' in window && Notification.permission === 'default') {
-    Notification.requestPermission();
-  }
 
   if (timerInterval) clearInterval(timerInterval);
   
@@ -34,18 +27,6 @@ export function renderActiveSessionBar(activeSession) {
     document.getElementById('activeTimer').textContent = 
       `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 
-    // TESTING THRESHOLD: 1 minute (60,000 ms). Change to 3600000 for 1 hour in production.
-    const targetThresholdMs = 60 * 1000; 
-
-    if (!notificationFired && diffMs >= targetThresholdMs) {
-      if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification('Poker Break Reminder 🚨', {
-          body: 'You have been playing continuously. Take a quick break to stretch and clear your mind!',
-          icon: 'apple-touch-icon.png'
-        });
-        notificationFired = true;
-      }
-    }
   };
 
   updateTimer();
@@ -112,7 +93,6 @@ export function initSessionModals(currentUser, loggedSessions, getActiveSession)
       startHand: startHand,
       startTime: startTimeISO,
       status: 'active',
-      breakNotified: false,
       createdAt: fb.serverTimestamp()
     };
 
@@ -137,6 +117,10 @@ export function initSessionModals(currentUser, loggedSessions, getActiveSession)
     const isOverride = document.getElementById('toggleEndOverride').checked;
     const overrideTime = document.getElementById('endTimeOverride').value;
     const endTimeISO = (isOverride && overrideTime) ? pacificInputToISO(overrideTime) : new Date().toISOString();
+    if (new Date(endTimeISO) <= new Date(activeSession.startTime)) {
+      alert('End time must be after start time.');
+      return;
+    }
     
     const cashOut = parseFloat(document.getElementById('endCashOut').value);
     const buyIn = activeSession.buyIn;
@@ -156,11 +140,8 @@ export function initSessionModals(currentUser, loggedSessions, getActiveSession)
       const fb = window.FirebaseServices;
       const userId = currentUser().uid;
 
-      // 1. Remove the active session from the user's dedicated subcollection
+      // Move the active session to the completed sessions collection atomically.
       const activeRef = fb.doc(fb.db, 'users', userId, 'activeSessions', activeSession.id);
-      await fb.deleteDoc(activeRef);
-
-      // 2. Add the finalized session into the top-level completed sessions collection
       const completedSessionData = {
         userId: userId,
         status: 'completed',
@@ -177,7 +158,11 @@ export function initSessionModals(currentUser, loggedSessions, getActiveSession)
         createdAt: fb.serverTimestamp()
       };
 
-      await fb.addDoc(fb.collection(fb.db, 'sessions'), completedSessionData);
+      const completedSessionRef = fb.doc(fb.collection(fb.db, 'sessions'));
+      const batch = fb.writeBatch(fb.db);
+      batch.delete(activeRef);
+      batch.set(completedSessionRef, completedSessionData);
+      await batch.commit();
 
       document.getElementById('summaryGameTitle').textContent = `${gameType} (${stakes})`;
       
