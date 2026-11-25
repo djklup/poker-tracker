@@ -1,6 +1,16 @@
 import { formatPacificDate, formatPacificTime } from './utils.js';
 import { renderPerformanceChart } from './charts.js';
 
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, character => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  })[character]);
+}
+
 export function getFilteredEntries(loggedSessions, bankrollTransactions) {
   const gameFilter = document.getElementById('filterGame')?.value || 'all';
   const stakesFilter = document.getElementById('filterStakes')?.value || 'all';
@@ -40,6 +50,8 @@ export function renderDashboardData(loggedSessions, bankrollTransactions) {
 function renderUnifiedActivityTable(loggedSessions, bankrollTransactions) {
   const tbody = document.getElementById('activityTableBody');
   const mobileContainer = document.getElementById('mobileActivityCards');
+  bindActivityActions(tbody);
+  bindActivityActions(mobileContainer);
 
   const { filteredSessions, filteredTx } = getFilteredEntries(loggedSessions, bankrollTransactions);
 
@@ -76,7 +88,7 @@ function renderUnifiedActivityTable(loggedSessions, bankrollTransactions) {
             <div class="font-medium text-gray-200">${formatPacificDate(item.startTime)}</div>
             <div class="text-xs text-gray-400">${formatPacificTime(item.startTime)}</div>
           </td>
-          <td class="py-3 px-3 font-semibold text-gray-200">${gameIcon} ${item.gameType} <span class="text-xs text-gray-400">(${item.stakes})</span></td>
+          <td class="py-3 px-3 font-semibold text-gray-200">${gameIcon} ${escapeHtml(item.gameType)} <span class="text-xs text-gray-400">(${escapeHtml(item.stakes)})</span></td>
           <td class="py-3 px-3">${durationHrs.toFixed(1)} hrs</td>
           <td class="py-3 px-3">
             <div>${totalHands > 0 ? totalHands.toLocaleString() + ' hands' : '--'}</div>
@@ -88,10 +100,10 @@ function renderUnifiedActivityTable(loggedSessions, bankrollTransactions) {
           </td>
           <td class="py-3 px-3 ${hourly >= 0 ? 'text-emerald-400' : 'text-rose-400'}">$${hourly.toFixed(2)}/hr</td>
           <td class="py-3 px-3 ${per100 >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${totalHands > 0 ? (per100 >= 0 ? '+' : '') + '$' + per100.toFixed(2) : '--'}</td>
-          <td class="py-3 px-3 max-w-xs truncate text-xs text-gray-400" title="${item.notes || ''}">${item.notes || '--'}</td>
+          <td class="py-3 px-3 max-w-xs truncate text-xs text-gray-400" title="${escapeHtml(item.notes)}">${escapeHtml(item.notes || '--')}</td>
           <td class="py-3 px-3 text-right space-x-2 rounded-r-xl">
-            <button onclick="window.editSession('${item.id}')" class="text-indigo-400 hover:text-indigo-300 font-medium text-xs">Edit</button>
-            <button onclick="window.deleteSession('${item.id}')" class="text-rose-400 hover:text-rose-300 font-medium text-xs">Delete</button>
+            <button data-action="edit-session" data-id="${escapeHtml(item.id)}" class="text-indigo-400 hover:text-indigo-300 font-medium text-xs">Edit</button>
+            <button data-action="delete-session" data-id="${escapeHtml(item.id)}" class="text-rose-400 hover:text-rose-300 font-medium text-xs">Delete</button>
           </td>
         </tr>
       `;
@@ -103,16 +115,16 @@ function renderUnifiedActivityTable(loggedSessions, bankrollTransactions) {
             <div class="font-medium text-gray-200">${formatPacificDate(item.timestamp)}</div>
             <div class="text-xs text-gray-400">${formatPacificTime(item.timestamp)}</div>
           </td>
-          <td class="py-3 px-3 font-semibold capitalize ${isDeposit ? 'text-emerald-400' : 'text-amber-400'}">💳 Bankroll ${item.type}</td>
+          <td class="py-3 px-3 font-semibold capitalize ${isDeposit ? 'text-emerald-400' : 'text-amber-400'}">💳 Bankroll ${escapeHtml(item.type)}</td>
           <td class="py-3 px-3 text-gray-500">--</td>
           <td class="py-3 px-3 text-gray-500">--</td>
           <td class="py-3 px-3 font-bold ${item.amount >= 0 ? 'text-emerald-400' : 'text-amber-400'}">${item.amount >= 0 ? '+' : ''}$${item.amount.toFixed(2)}</td>
           <td class="py-3 px-3 text-gray-500">--</td>
           <td class="py-3 px-3 text-gray-500">--</td>
-          <td class="py-3 px-3 text-xs text-gray-300">${item.note || '--'}</td>
+          <td class="py-3 px-3 text-xs text-gray-300">${escapeHtml(item.note || '--')}</td>
           <td class="py-3 px-3 text-right space-x-2 rounded-r-xl">
-            <button onclick="window.editTransaction('${item.id}')" class="text-indigo-400 text-xs">Edit</button>
-            <button onclick="window.deleteTransaction('${item.id}')" class="text-rose-400 text-xs">Delete</button>
+            <button data-action="edit-transaction" data-id="${escapeHtml(item.id)}" class="text-indigo-400 text-xs">Edit</button>
+            <button data-action="delete-transaction" data-id="${escapeHtml(item.id)}" class="text-rose-400 text-xs">Delete</button>
           </td>
         </tr>
       `;
@@ -137,8 +149,8 @@ function renderUnifiedActivityTable(loggedSessions, bankrollTransactions) {
             <div>
               <div class="font-bold text-gray-100 flex items-center space-x-1.5">
                 <span>${gameIcon}</span>
-                <span>${item.gameType}</span>
-                <span class="text-xs text-gray-400 font-normal">(${item.stakes})</span>
+                <span>${escapeHtml(item.gameType)}</span>
+                <span class="text-xs text-gray-400 font-normal">(${escapeHtml(item.stakes)})</span>
               </div>
               <div class="text-xs text-gray-400 mt-0.5">
                 ${formatPacificDate(item.startTime)} • ${formatPacificTime(item.startTime)}
@@ -176,11 +188,11 @@ function renderUnifiedActivityTable(loggedSessions, bankrollTransactions) {
               <span class="text-[10px] text-gray-400">(${item.startHand || 0}-${item.endHand || 0})</span>
             </div>
           </div>
-          ${item.notes ? `<div class="text-xs text-gray-400 italic bg-gray-900/40 p-2 rounded border border-gray-800">"${item.notes}"</div>` : ''}
+          ${item.notes ? `<div class="text-xs text-gray-400 italic bg-gray-900/40 p-2 rounded border border-gray-800">"${escapeHtml(item.notes)}"</div>` : ''}
 
           <div class="flex justify-end space-x-3 pt-2 border-t border-gray-700/40">
-            <button onclick="window.editSession('${item.id}')" class="text-indigo-400 hover:text-indigo-300 font-medium text-xs px-2.5 py-1 bg-indigo-950/40 rounded border border-indigo-900/50">Edit</button>
-            <button onclick="window.deleteSession('${item.id}')" class="text-rose-400 hover:text-rose-300 font-medium text-xs px-2.5 py-1 bg-rose-950/40 rounded border border-rose-900/50">Delete</button>
+            <button data-action="edit-session" data-id="${escapeHtml(item.id)}" class="text-indigo-400 hover:text-indigo-300 font-medium text-xs px-2.5 py-1 bg-indigo-950/40 rounded border border-indigo-900/50">Edit</button>
+            <button data-action="delete-session" data-id="${escapeHtml(item.id)}" class="text-rose-400 hover:text-rose-300 font-medium text-xs px-2.5 py-1 bg-rose-950/40 rounded border border-rose-900/50">Delete</button>
           </div>
         </div>
       `;
@@ -191,7 +203,7 @@ function renderUnifiedActivityTable(loggedSessions, bankrollTransactions) {
           <div class="flex justify-between items-start">
             <div class="font-semibold capitalize ${isDeposit ? 'text-emerald-400' : 'text-amber-400'} flex items-center space-x-1.5">
               <span>💳</span>
-              <span>Bankroll ${item.type}</span>
+              <span>Bankroll ${escapeHtml(item.type)}</span>
             </div>
             <div class="text-base font-bold ${item.amount >= 0 ? 'text-emerald-400' : 'text-amber-400'}">
               ${item.amount >= 0 ? '+' : ''}$${item.amount.toFixed(2)}
@@ -200,15 +212,32 @@ function renderUnifiedActivityTable(loggedSessions, bankrollTransactions) {
           <div class="text-xs text-gray-400">
             ${formatPacificDate(item.timestamp)} • ${formatPacificTime(item.timestamp)}
           </div>
-          ${item.note ? `<div class="text-xs text-gray-300 italic">${item.note}</div>` : ''}
+          ${item.note ? `<div class="text-xs text-gray-300 italic">${escapeHtml(item.note)}</div>` : ''}
           <div class="flex justify-end space-x-3 pt-1 border-t border-gray-700/40">
-            <button onclick="window.editTransaction('${item.id}')" class="text-indigo-400 text-xs">Edit</button>
-            <button onclick="window.deleteTransaction('${item.id}')" class="text-rose-400 text-xs">Delete</button>
+            <button data-action="edit-transaction" data-id="${escapeHtml(item.id)}" class="text-indigo-400 text-xs">Edit</button>
+            <button data-action="delete-transaction" data-id="${escapeHtml(item.id)}" class="text-rose-400 text-xs">Delete</button>
           </div>
         </div>
       `;
     }
   }).join('');
+}
+
+function bindActivityActions(container) {
+  if (container.dataset.actionsBound) return;
+  container.dataset.actionsBound = 'true';
+  container.addEventListener('click', event => {
+    const button = event.target.closest('[data-action]');
+    if (!button || !container.contains(button)) return;
+
+    const handlers = {
+      'edit-session': window.editSession,
+      'delete-session': window.deleteSession,
+      'edit-transaction': window.editTransaction,
+      'delete-transaction': window.deleteTransaction
+    };
+    handlers[button.dataset.action]?.(button.dataset.id);
+  });
 }
 
 function calculateOverallStats(filteredSessions, filteredTx, loggedSessions, bankrollTransactions) {
@@ -244,7 +273,7 @@ function calculateOverallStats(filteredSessions, filteredTx, loggedSessions, ban
   
   let latestSession = sortedSessions[0];
   let latestEndingBankroll = latestSession
-    ? Number(latestSession.endingBankroll ?? 0)
+    ? Number(latestSession.cashOut ?? latestSession.endingBankroll ?? 0)
     : 0;
   let latestSessionTime = latestSession
     ? new Date(latestSession.endTime || latestSession.startTime || latestSession.date || 0).getTime()
