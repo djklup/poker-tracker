@@ -116,11 +116,36 @@ export function initSessionModals(currentUser, loggedSessions, getActiveSession)
       createdAt: fb.serverTimestamp()
     };
 
-    // Save as a subcollection under users/{userId}/activeSessions
-    await fb.addDoc(fb.collection(fb.db, 'users', userId, 'activeSessions'), sessionData);
-    
-    document.getElementById('startModal').classList.add('hidden');
-    document.getElementById('startSessionForm').reset();
+    const activeSessionsRef = fb.collection(fb.db, 'users', userId, 'activeSessions');
+    const activeSessionRef = fb.doc(fb.db, 'users', userId, 'activeSessions', 'current');
+
+    try {
+      const activeSessions = await fb.getDocs(activeSessionsRef);
+      if (!activeSessions.empty) {
+        alert('You already have an active session in progress.');
+        return;
+      }
+
+      await fb.runTransaction(fb.db, async (transaction) => {
+        const existingSession = await transaction.get(activeSessionRef);
+        if (existingSession.exists()) {
+          const error = new Error('An active session already exists.');
+          error.code = 'active-session-exists';
+          throw error;
+        }
+        transaction.set(activeSessionRef, sessionData);
+      });
+
+      document.getElementById('startModal').classList.add('hidden');
+      document.getElementById('startSessionForm').reset();
+    } catch (err) {
+      if (err.code === 'active-session-exists') {
+        alert('You already have an active session in progress.');
+      } else {
+        console.error('Error starting session:', err);
+        alert('Failed to start session. Please try again.');
+      }
+    }
   });
 
   document.getElementById('endSessionForm').addEventListener('submit', async (e) => {

@@ -268,22 +268,56 @@ function calculateOverallStats(filteredSessions, filteredTx, loggedSessions, ban
   document.getElementById('statHourly').className = `text-xl md:text-2xl font-bold ${overallHourly >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
 }
 
-export function exportToCSV(loggedSessions) {
-  if (loggedSessions.length === 0) {
-    alert("No session data available to export.");
+export function exportToCSV(loggedSessions, bankrollTransactions = []) {
+  if (loggedSessions.length === 0 && bankrollTransactions.length === 0) {
+    alert("No session or transaction data available to export.");
     return;
   }
-  let csv = "Date (PT),Game,Stakes,Start Time (PT),End Time (PT),Hours,Start Hand,End Hand,Total Hands,Net Profit,$/100 Hands,Notes\n";
-  loggedSessions.forEach(s => {
-    const start = new Date(s.startTime);
-    const end = new Date(s.endTime);
-    const hrs = ((end - start) / 3600000).toFixed(2);
-    const hands = (s.endHand && s.startHand) ? (s.endHand - s.startHand) : 0;
-    const profit = s.netProfit || 0;
+
+  const csvCell = (value) => `"${String(value ?? '').replace(/"/g, '""')}"`;
+  const safeText = (value) => {
+    const text = String(value ?? '');
+    return /^[\t\r\n ]*[=+@-]/.test(text) ? `'${text}` : text;
+  };
+  const header = [
+    'Date (PT)', 'Record Type', 'Game', 'Stakes', 'Start Time (PT)', 'End Time (PT)',
+    'Hours', 'Start Hand', 'End Hand', 'Total Hands', 'Buy In', 'Cash Out',
+    'Net Profit / Amount', '$/100 Hands', 'Transaction Type', 'Notes'
+  ];
+  const rows = loggedSessions.map(session => {
+    const start = new Date(session.startTime);
+    const end = new Date(session.endTime);
+    const hours = ((end - start) / 3600000).toFixed(2);
+    const hands = (session.endHand && session.startHand) ? session.endHand - session.startHand : 0;
+    const profit = session.netProfit || 0;
     const per100 = hands > 0 ? (profit / hands) * 100 : 0;
-    const cleanNotes = (s.notes || "").replace(/"/g, '""');
-    csv += `"${formatPacificDate(s.startTime)}","${s.gameType}","${s.stakes}","${formatPacificTime(s.startTime)}","${formatPacificTime(s.endTime)}",${hrs},${s.startHand},${s.endHand || ''},${hands},${profit},${per100.toFixed(2)},"${cleanNotes}"\n`;
+
+    return {
+      timestamp: start.getTime(),
+      values: [
+        formatPacificDate(session.startTime), 'Session', safeText(session.gameType), safeText(session.stakes),
+        formatPacificTime(session.startTime), formatPacificTime(session.endTime), hours,
+        session.startHand ?? '', session.endHand ?? '', hands, session.buyIn ?? '', session.cashOut ?? '',
+        profit, per100.toFixed(2), '', safeText(session.notes)
+      ]
+    };
   });
+
+  bankrollTransactions.forEach(transaction => {
+    const timestamp = new Date(transaction.timestamp);
+    rows.push({
+      timestamp: timestamp.getTime(),
+      values: [
+        formatPacificDate(transaction.timestamp), 'Transaction', '', '',
+        formatPacificTime(transaction.timestamp), '', '', '', '', '', '', '',
+        transaction.amount ?? 0, '', safeText(transaction.type), safeText(transaction.note)
+      ]
+    });
+  });
+
+  const csv = [header, ...rows.sort((a, b) => b.timestamp - a.timestamp).map(row => row.values)]
+    .map(row => row.map(csvCell).join(','))
+    .join('\r\n');
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');

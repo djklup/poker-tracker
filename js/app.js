@@ -102,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderDashboardData(loggedSessions, bankrollTransactions);
   });
 
-  document.getElementById('exportCsvBtn').addEventListener('click', () => exportToCSV(loggedSessions));
+  document.getElementById('exportCsvBtn').addEventListener('click', () => exportToCSV(loggedSessions, bankrollTransactions));
 
   //Edit Active button
   document.getElementById('editActiveSessionBtn').addEventListener('click', () => {
@@ -196,11 +196,8 @@ function attachFirestoreListeners() {
   // Listen to active sessions from the user's dedicated subcollection
   const qActive = fb.query(fb.collection(fb.db, 'users', currentUser.uid, 'activeSessions'));
   fb.onSnapshot(qActive, (snapshot) => {
-    activeSession = null;
-    snapshot.docs.forEach(docSnap => {
-      const data = { id: docSnap.id, ...docSnap.data() };
-      activeSession = data;
-    });
+    const activeDoc = snapshot.docs.find(docSnap => docSnap.id === 'current') || snapshot.docs[0];
+    activeSession = activeDoc ? { id: activeDoc.id, ...activeDoc.data() } : null;
     renderActiveSessionBar(activeSession);
   },
   (err) => console.error("Error listening to sessions:", err)

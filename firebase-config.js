@@ -14,6 +14,7 @@ import {
   getFirestore,
   collection,
   doc,
+  getDocs,
   addDoc,
   updateDoc,
   deleteDoc,
@@ -21,7 +22,9 @@ import {
   query,
   where,
   orderBy,
-  serverTimestamp
+  serverTimestamp,
+  writeBatch,
+  runTransaction
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // Add `where` inside window.FirebaseServices = { ... }
@@ -52,6 +55,7 @@ window.FirebaseServices = {
   onAuthStateChanged,
   collection,
   doc,
+  getDocs,
   addDoc,
   updateDoc,
   deleteDoc,
@@ -59,7 +63,9 @@ window.FirebaseServices = {
   query,
   where,
   orderBy,
-  serverTimestamp
+  serverTimestamp,
+  writeBatch,
+  runTransaction
 };
 
 // Flag that it's loaded
