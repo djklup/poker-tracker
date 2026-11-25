@@ -10,7 +10,7 @@ let activeSession = null;
 let loggedSessions = [];
 let bankrollTransactions = [];
 
-const APP_VERSION = "v0.111";
+const APP_VERSION = "v0.112";
 document.getElementById('appVersionDisplay').textContent = APP_VERSION;
 
 async function unregisterLegacyPushWorker() {
